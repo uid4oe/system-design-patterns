@@ -1,6 +1,7 @@
 import {
   ReactFlow,
   Background,
+  Handle,
   useReactFlow,
   ReactFlowProvider,
   type Node,
@@ -45,10 +46,20 @@ function SimulationNodeComponent({ data }: NodeProps) {
         boxShadow: isTarget
           ? `0 0 0 3px ${colors.border}33, 0 1px 2px rgba(0,0,0,0.03)`
           : "0 1px 2px rgba(0,0,0,0.03), 0 4px 16px rgba(0,0,0,0.02)",
-        transition: "border-color 0.3s, background 0.3s, box-shadow 0.3s",
+        transition: "border-color 0.3s, background 0.3s, box-shadow 0.3s, transform 0.2s",
         transform: isTarget ? "scale(1.03)" : "scale(1)",
       }}
     >
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{ background: colors.border, border: "none", width: 6, height: 6 }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{ background: colors.border, border: "none", width: 6, height: 6 }}
+      />
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
         <span
           style={{
