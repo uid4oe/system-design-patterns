@@ -119,48 +119,13 @@ export function App() {
       {/* Input bar — identical to reference */}
       <div className="shrink-0">
         <div className="max-w-2xl w-full mx-auto rounded-2xl glass-strong px-3 py-2 transition-shadow">
-          {/* Top row: status (replaces textarea + send in ref) */}
+          {/* Pattern tabs */}
           <div className="flex items-center gap-2">
-            {state.isRunning ? (
-              <span className="flex-1 flex items-center gap-2 resize-none bg-transparent px-1 py-1.5 text-sm text-[var(--color-text-secondary)]">
-                <span className="h-3.5 w-3.5 rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-accent)] animate-spin-slow" />
-                Simulation running…
-              </span>
-            ) : state.metrics ? (
-              <span className="flex-1 bg-transparent px-1 py-1.5 text-sm text-[var(--color-text-secondary)]">
-                {state.metrics.totalRequests} requests · {state.metrics.successCount} ok · {state.metrics.errorCount} errors · p99 {state.metrics.p99LatencyMs}ms
-              </span>
-            ) : (
-              <span className="flex-1 bg-transparent px-1 py-1.5 text-sm text-[var(--color-text-tertiary)]">
-                Select a pattern and run a scenario
-              </span>
-            )}
-            {state.isRunning && (
-              <button
-                type="button"
-                onClick={reset}
-                className="shrink-0 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:brightness-110 focus:outline-none transition-all shadow-sm shadow-blue-500/15"
-              >
-                <span className="flex items-center gap-1.5">
-                  <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin-slow" />
-                  Running
-                </span>
-              </button>
-            )}
-          </div>
-          {/* Bottom row: pattern tabs */}
-          <div className="flex items-center gap-2 mt-1.5 pt-1.5 border-t border-[var(--color-border-light)]">
             <PatternSelector
               selected={selectedPattern}
               onSelect={handlePatternSelect}
               isStreaming={state.isRunning}
             />
-            <div className="flex-1" />
-            {!state.isRunning && (
-              <span className="text-[11px] text-[var(--color-text-tertiary)] pointer-events-none select-none shrink-0 hidden sm:flex items-center gap-1">
-                <span className="text-[10px]">System Design Patterns</span>
-              </span>
-            )}
           </div>
         </div>
       </div>
