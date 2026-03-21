@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.github
+.claude
+docs
+*.md
+!packages/*/package.json
+!server/package.json
+!frontend/package.json
+.env
+.env.*
+coverage
+.vite
