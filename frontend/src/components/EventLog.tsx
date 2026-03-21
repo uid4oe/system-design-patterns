@@ -75,7 +75,7 @@ export function EventLog({ events }: EventLogProps) {
   return (
     <div
       ref={scrollRef}
-      className="glass-card rounded-xl p-3 max-h-44 overflow-y-auto custom-scrollbar animate-fade-in"
+      className="p-3 animate-fade-in"
     >
       <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)] mb-1.5 flex items-center gap-1.5">
         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
