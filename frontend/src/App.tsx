@@ -120,19 +120,15 @@ export function App() {
         </div>
       </main>
 
-      {/* Footer — input bar style, centered */}
-      <div className="shrink-0">
-        <div className="max-w-2xl w-full mx-auto rounded-2xl glass-strong px-3 py-2">
-          <div className="flex items-center">
+      {/* Footer — centered pattern bar */}
+      <div className="shrink-0 flex justify-center">
+        <div className="rounded-2xl glass-strong px-5 py-3">
+          <div className="flex items-center justify-center gap-3">
             <PatternSelector
               selected={selectedPattern}
               onSelect={handlePatternSelect}
               isStreaming={state.isRunning}
             />
-            <div className="flex-1" />
-            <span className="text-[11px] text-[var(--color-text-tertiary)] pointer-events-none select-none shrink-0 hidden sm:block">
-              System Design &amp; Distribution
-            </span>
           </div>
         </div>
       </div>
