@@ -8,8 +8,7 @@ import { rateLimiter } from "./middleware/rate-limiter.js";
 import type { LoadedPattern } from "./routes/patterns.js";
 
 const PATTERN_PACKAGES: string[] = [
-  // Patterns will be added here as they are implemented:
-  // "@design-patterns/circuit-breaker",
+  "@design-patterns/circuit-breaker",
   // "@design-patterns/saga",
   // "@design-patterns/cqrs",
   // "@design-patterns/load-balancer",

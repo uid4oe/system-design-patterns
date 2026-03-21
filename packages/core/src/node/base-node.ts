@@ -20,7 +20,7 @@ export abstract class BaseNode {
   private totalErrors = 0;
   private totalLatencyMs = 0;
   private random: SeededRandom;
-  private clock: SimulationClock;
+  protected clock: SimulationClock;
   private failureRate: number;
   private latencyMs: number;
   private capacity: number;

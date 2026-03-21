@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/core" },
     { "path": "server" },
-    { "path": "frontend" }
+    { "path": "frontend" },
+    { "path": "patterns/circuit-breaker" }
   ]
 }

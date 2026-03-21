@@ -1,0 +1,36 @@
+{
+  "name": "circuit-breaker-eval",
+  "scenarios": [
+    {
+      "name": "healthy_traffic",
+      "config": { "requestCount": 50, "requestsPerSecond": 10, "seed": 1 },
+      "criteria": [
+        { "name": "error_rate", "threshold": 0.01, "comparator": "lt", "weight": 1 }
+      ]
+    },
+    {
+      "name": "backend_failure_50pct",
+      "config": {
+        "requestCount": 100,
+        "requestsPerSecond": 10,
+        "seed": 2,
+        "failureInjection": { "nodeFailures": { "backend": 0.5 } }
+      },
+      "criteria": [
+        { "name": "fast_fail_ratio", "threshold": 0.1, "comparator": "gt", "weight": 1 }
+      ]
+    },
+    {
+      "name": "backend_down",
+      "config": {
+        "requestCount": 50,
+        "requestsPerSecond": 20,
+        "seed": 3,
+        "failureInjection": { "nodeFailures": { "backend": 1.0 } }
+      },
+      "criteria": [
+        { "name": "error_rate", "threshold": 0.5, "comparator": "gt", "weight": 1 }
+      ]
+    }
+  ]
+}
