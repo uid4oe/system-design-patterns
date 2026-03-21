@@ -41,24 +41,51 @@ export interface EvalResult {
   overallScore: number;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isValidCriteria(c: unknown): c is EvalCriteria {
+  if (!isRecord(c)) return false;
+  return (
+    typeof c["name"] === "string" &&
+    typeof c["threshold"] === "number" &&
+    typeof c["comparator"] === "string" &&
+    ["lt", "gt", "eq"].includes(c["comparator"] as string) &&
+    typeof c["weight"] === "number"
+  );
+}
+
 /** Load and validate an eval dataset from a JSON file. */
 export function loadDataset(path: string): EvalDataset {
   const raw = readFileSync(path, "utf-8");
-  const data = JSON.parse(raw) as EvalDataset;
+  const data: unknown = JSON.parse(raw);
 
-  if (!data.name || !Array.isArray(data.scenarios)) {
+  if (!isRecord(data) || typeof data["name"] !== "string" || !Array.isArray(data["scenarios"])) {
     throw new Error(`Invalid dataset at ${path}: missing name or scenarios`);
   }
 
-  for (const scenario of data.scenarios) {
-    if (!scenario.name || !scenario.config || !Array.isArray(scenario.criteria)) {
+  const scenarios: EvalScenario[] = [];
+  for (const scenario of data["scenarios"] as unknown[]) {
+    if (!isRecord(scenario)) {
+      throw new Error(`Invalid scenario in dataset ${data["name"]}: not an object`);
+    }
+    if (typeof scenario["name"] !== "string" || !isRecord(scenario["config"]) || !Array.isArray(scenario["criteria"])) {
       throw new Error(
-        `Invalid scenario "${scenario.name ?? "unknown"}" in dataset ${data.name}`,
+        `Invalid scenario "${String(scenario["name"] ?? "unknown")}" in dataset ${data["name"]}`,
       );
     }
+    for (const criteria of scenario["criteria"] as unknown[]) {
+      if (!isValidCriteria(criteria)) {
+        throw new Error(
+          `Invalid criteria in scenario "${scenario["name"]}" of dataset ${data["name"]}`,
+        );
+      }
+    }
+    scenarios.push(scenario as unknown as EvalScenario);
   }
 
-  return data;
+  return { name: data["name"] as string, scenarios };
 }
 
 /** Score a metric value against a criterion. */

@@ -6,6 +6,7 @@ import type { AggregateMetrics } from "../stream/types.js";
  */
 export class MetricCollector {
   private latencies: number[] = [];
+  private sortedCache: number[] | null = null;
   private successCount = 0;
   private errorCount = 0;
   private startTimeMs = 0;
@@ -24,6 +25,7 @@ export class MetricCollector {
   /** Record a request's latency in milliseconds. */
   recordLatency(ms: number): void {
     this.latencies.push(ms);
+    this.sortedCache = null;
   }
 
   /** Record a successful request. */
@@ -58,17 +60,22 @@ export class MetricCollector {
   /** Reset all collected data. */
   reset(): void {
     this.latencies = [];
+    this.sortedCache = null;
     this.successCount = 0;
     this.errorCount = 0;
     this.startTimeMs = 0;
     this.endTimeMs = 0;
   }
 
+  /** Nearest-rank percentile calculation with sorted array caching. */
   private percentile(p: number): number {
     if (this.latencies.length === 0) return 0;
 
-    const sorted = [...this.latencies].sort((a, b) => a - b);
-    const index = Math.ceil((p / 100) * sorted.length) - 1;
-    return sorted[Math.max(0, index)] ?? 0;
+    if (!this.sortedCache) {
+      this.sortedCache = [...this.latencies].sort((a, b) => a - b);
+    }
+
+    const index = Math.ceil((p / 100) * this.sortedCache.length) - 1;
+    return this.sortedCache[Math.max(0, index)] ?? 0;
   }
 }

@@ -140,4 +140,36 @@ describe("BaseNode", () => {
     const failedNode = new TestNode({ name: "test", role: "tester", initialState: "failed" });
     expect(failedNode.isHealthy()).toBe(false);
   });
+
+  it("resetMetrics() clears all counters", async () => {
+    const node = new TestNode({ name: "test", role: "tester", latencyMs: 0 });
+    const { emitter } = createEmitter();
+
+    await node.run(createRequest("r1"), emitter);
+    await node.run(createRequest("r2"), emitter);
+
+    let metrics = node.getMetrics();
+    expect(metrics.requestsHandled).toBe(2);
+
+    node.resetMetrics();
+    metrics = node.getMetrics();
+    expect(metrics.requestsHandled).toBe(0);
+    expect(metrics.errorsCount).toBe(0);
+    expect(metrics.avgLatencyMs).toBe(0);
+  });
+
+  it("uses SimulationClock for latency instead of real setTimeout", async () => {
+    // With default latencyMs=50, simulation should complete near-instantly
+    // because SimulationClock.delay() doesn't pause real time by default
+    const node = new TestNode({ name: "test", role: "tester", latencyMs: 1000 });
+    const { emitter } = createEmitter();
+
+    const before = Date.now();
+    await node.run(createRequest(), emitter);
+    const elapsed = Date.now() - before;
+
+    // Should complete in <100ms despite 1000ms configured latency
+    // because SimulationClock uses virtual time, not real time
+    expect(elapsed).toBeLessThan(100);
+  });
 });

@@ -1,10 +1,14 @@
 import type { SimulationEmitter, NodeMetrics } from "../stream/types.js";
 import type { NodeConfig, NodeResult, SimulationRequest } from "./types.js";
 import { SeededRandom } from "../simulation/random.js";
+import { SimulationClock } from "../simulation/clock.js";
 
 /**
  * Abstract base class for all simulation nodes. Handles lifecycle events,
  * latency simulation, failure injection, and capacity management.
+ *
+ * Uses SimulationClock for latency simulation — virtual time by default,
+ * with optional real-time pacing for visualization.
  */
 export abstract class BaseNode {
   readonly name: string;
@@ -16,11 +20,13 @@ export abstract class BaseNode {
   private totalErrors = 0;
   private totalLatencyMs = 0;
   private random: SeededRandom;
+  private clock: SimulationClock;
   private failureRate: number;
   private latencyMs: number;
   private capacity: number;
+  private realTime: boolean;
 
-  constructor(config: NodeConfig, seed = 0) {
+  constructor(config: NodeConfig, seed = 0, clock?: SimulationClock, realTime = false) {
     this.name = config.name;
     this.role = config.role;
     this.config = config;
@@ -29,6 +35,8 @@ export abstract class BaseNode {
     this.latencyMs = config.latencyMs ?? 50;
     this.capacity = config.capacity ?? Infinity;
     this.random = new SeededRandom(seed);
+    this.clock = clock ?? new SimulationClock();
+    this.realTime = realTime;
   }
 
   /** Override failure rate at runtime (e.g., from scenario failure injection). */
@@ -195,7 +203,7 @@ export abstract class BaseNode {
     if (this.latencyMs > 0) {
       const jitter = this.random.between(0.8, 1.2);
       const delay = Math.round(this.latencyMs * jitter);
-      await new Promise<void>((resolve) => setTimeout(resolve, delay));
+      await this.clock.delay(delay, this.realTime);
     }
   }
 
