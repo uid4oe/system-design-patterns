@@ -33,19 +33,19 @@ export function createSimulator(): PatternSimulator {
 
       // Create service nodes
       const order = new OrderService(
-        { name: "order", role: "service", latencyMs: 20 },
+        { name: "order", role: "service", latencyMs: 80 },
         seed + 1, clock, realTime,
       );
       const payment = new PaymentService(
-        { name: "payment", role: "service", latencyMs: 30 },
+        { name: "payment", role: "service", latencyMs: 120 },
         seed + 2, clock, realTime,
       );
       const inventory = new InventoryService(
-        { name: "inventory", role: "service", latencyMs: 25 },
+        { name: "inventory", role: "service", latencyMs: 100 },
         seed + 3, clock, realTime,
       );
       const shipping = new ShippingService(
-        { name: "shipping", role: "service", latencyMs: 20 },
+        { name: "shipping", role: "service", latencyMs: 80 },
         seed + 4, clock, realTime,
       );
 
