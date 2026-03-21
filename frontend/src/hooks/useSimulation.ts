@@ -214,7 +214,7 @@ export function useSimulation(activePattern: string | null) {
               // flushSync breaks React 18 batching so topology updates per-event
               flushSync(() => setState((prev) => reduceEvent(prev, event)));
               // Delay between events so the UI streams visibly
-              await new Promise((r) => setTimeout(r, 300));
+              await new Promise((r) => setTimeout(r, 100));
             } catch {
               // Skip malformed events
             }
