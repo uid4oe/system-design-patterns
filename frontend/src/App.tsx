@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { useSimulation } from "./hooks/useSimulation.ts";
 import { PatternSelector } from "./components/PatternSelector.tsx";
-import { ControlPanel } from "./components/ControlPanel.tsx";
 import { TopologyView } from "./components/TopologyView.tsx";
 import { MetricsPanel } from "./components/MetricsPanel.tsx";
 import { EventLog } from "./components/EventLog.tsx";
@@ -22,6 +21,14 @@ export function App() {
         requestsPerSecond: scenario.requestsPerSecond,
         failureInjection: scenario.failureInjection,
       };
+      run(config);
+    },
+    [selectedPattern, state.isRunning, run],
+  );
+
+  const handleRunCustom = useCallback(
+    (config: ScenarioConfig) => {
+      if (!selectedPattern || state.isRunning) return;
       run(config);
     },
     [selectedPattern, state.isRunning, run],
@@ -59,17 +66,19 @@ export function App() {
 
       {/* Main panels */}
       <main className="flex flex-1 min-h-0 flex-col lg:flex-row gap-2 lg:gap-2.5">
-        {/* LEFT — Educational content */}
+        {/* LEFT — Educational content + simulation controls */}
         <div className="flex-[3] min-h-0 glass rounded-2xl overflow-hidden">
           <LearnView
             selectedPattern={selectedPattern}
             onTryScenario={handleTryScenario}
+            onRunCustom={handleRunCustom}
+            isRunning={state.isRunning}
+            onReset={reset}
           />
         </div>
 
-        {/* RIGHT — Simulation visualization + flow */}
+        {/* RIGHT — Topology + flow + stats */}
         <div className="flex-[2] min-h-0 flex flex-col gap-2">
-          {/* Topology + metrics + event log */}
           <div className="flex-1 min-h-0 glass-strong rounded-2xl overflow-hidden flex flex-col">
             <TopologyView nodes={state.nodes} edges={state.edges} />
             {state.events.length > 0 && (
@@ -84,7 +93,6 @@ export function App() {
             )}
           </div>
 
-          {/* Simulation flow summary */}
           {state.nodes.length > 0 && (
             <div className="shrink-0 glass-strong rounded-2xl overflow-hidden">
               <SimulationFlowSummary
@@ -95,7 +103,6 @@ export function App() {
             </div>
           )}
 
-          {/* Error */}
           {state.error && !state.isRunning && (
             <div className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 animate-fade-in">
               {state.error}
@@ -104,29 +111,16 @@ export function App() {
         </div>
       </main>
 
-      {/* Footer — centered input bar */}
+      {/* Footer — pattern selector only */}
       <div className="shrink-0">
-        <div className="max-w-2xl w-full mx-auto rounded-2xl glass-strong px-3 py-2 focus-within:ring-2 focus-within:ring-[var(--color-accent)]/15 transition-shadow">
-          {/* Top row: controls + run */}
-          <ControlPanel
-            isRunning={state.isRunning}
-            onRun={run}
-            onReset={reset}
-          />
-
-          {/* Bottom row: pattern tabs */}
-          <div className="flex items-center gap-2 mt-1.5 pt-1.5 border-t border-[var(--color-border-light)]">
+        <div className="max-w-2xl w-full mx-auto rounded-2xl glass-strong px-3 py-2 transition-shadow">
+          <div className="flex items-center gap-2">
             <PatternSelector
               selected={selectedPattern}
               onSelect={handlePatternSelect}
               isStreaming={state.isRunning}
             />
             <div className="flex-1" />
-            {!state.isRunning && (
-              <span className="text-[11px] text-[var(--color-text-tertiary)] pointer-events-none select-none shrink-0 hidden sm:flex items-center gap-1">
-                <span className="text-[10px]">System Design Patterns</span>
-              </span>
-            )}
           </div>
         </div>
       </div>

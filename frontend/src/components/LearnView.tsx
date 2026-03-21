@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { PATTERN_CONTENT } from "../data/pattern-content.ts";
 import type { PatternContent, SuggestedScenario } from "../data/pattern-content.ts";
 import { CollapsibleSection } from "./CollapsibleSection.tsx";
 import { MermaidDiagram } from "./MermaidDiagram.tsx";
 import { SuggestedPrompts } from "./SuggestedPrompts.tsx";
+import type { ScenarioConfig } from "../types.ts";
 
-/* ── Icons for collapsible sections ──────────────────────────── */
+/* ── Icons ──────────────────────────────────────────────────── */
 
 const iconTarget = (
   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -37,7 +39,13 @@ const iconTradeoffs = (
   </svg>
 );
 
-/* ── Overview grid (no pattern selected) ─────────────────────── */
+const iconRun = (
+  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+  </svg>
+);
+
+/* ── Overview grid ──────────────────────────────────────────── */
 
 function PatternOverviewGrid() {
   const patterns = Object.values(PATTERN_CONTENT);
@@ -76,14 +84,117 @@ function PatternOverviewGrid() {
   );
 }
 
-/* ── Pattern content (specific pattern selected) ─────────────── */
+/* ── Custom run controls (inline in the card) ────────────────── */
+
+interface RunControlsProps {
+  isRunning: boolean;
+  onRun: (config: ScenarioConfig) => void;
+  onReset: () => void;
+}
+
+function RunControls({ isRunning, onRun, onReset }: RunControlsProps) {
+  const [requestCount, setRequestCount] = useState(20);
+  const [requestsPerSecond, setRequestsPerSecond] = useState(5);
+  const [failureRate, setFailureRate] = useState(0);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+            Requests
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={200}
+            value={requestCount}
+            onChange={(e) => setRequestCount(Number(e.target.value))}
+            disabled={isRunning}
+            className="w-20 bg-[var(--color-surface-tertiary)] text-[var(--color-text-primary)] px-2.5 py-1.5 rounded-lg text-sm font-mono border border-[var(--color-border-light)] outline-none focus:border-[var(--color-accent)] transition-colors disabled:opacity-40"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+            Rate (rps)
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={50}
+            value={requestsPerSecond}
+            onChange={(e) => setRequestsPerSecond(Number(e.target.value))}
+            disabled={isRunning}
+            className="w-20 bg-[var(--color-surface-tertiary)] text-[var(--color-text-primary)] px-2.5 py-1.5 rounded-lg text-sm font-mono border border-[var(--color-border-light)] outline-none focus:border-[var(--color-accent)] transition-colors disabled:opacity-40"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+            Failure %
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            value={failureRate}
+            onChange={(e) => setFailureRate(Number(e.target.value))}
+            disabled={isRunning}
+            className="w-20 bg-[var(--color-surface-tertiary)] text-[var(--color-text-primary)] px-2.5 py-1.5 rounded-lg text-sm font-mono border border-[var(--color-border-light)] outline-none focus:border-[var(--color-accent)] transition-colors disabled:opacity-40"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() =>
+            onRun({
+              requestCount,
+              requestsPerSecond,
+              ...(failureRate > 0
+                ? { failureInjection: { nodeFailures: { backend: failureRate / 100 } } }
+                : {}),
+            })
+          }
+          disabled={isRunning}
+          className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm shadow-blue-500/15"
+        >
+          {isRunning ? (
+            <span className="flex items-center gap-1.5">
+              <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin-slow" />
+              Running
+            </span>
+          ) : (
+            "Run Simulation"
+          )}
+        </button>
+        <button
+          onClick={onReset}
+          disabled={isRunning}
+          className="rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--color-text-tertiary)] hover:bg-black/[0.03] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          Reset
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Pattern content view ───────────────────────────────────── */
 
 interface PatternContentViewProps {
   pattern: PatternContent;
   onTryScenario: (scenario: SuggestedScenario) => void;
+  onRunCustom: (config: ScenarioConfig) => void;
+  isRunning: boolean;
+  onReset: () => void;
 }
 
-function PatternContentView({ pattern, onTryScenario }: PatternContentViewProps) {
+function PatternContentView({
+  pattern,
+  onTryScenario,
+  onRunCustom,
+  isRunning,
+  onReset,
+}: PatternContentViewProps) {
   return (
     <div className="h-full overflow-y-auto p-5 custom-scrollbar">
       {/* Hero */}
@@ -104,13 +215,11 @@ function PatternContentView({ pattern, onTryScenario }: PatternContentViewProps)
         </p>
       </div>
 
-      {/* Collapsible sections */}
       <div className="space-y-2.5">
-        {/* When to Use */}
         <CollapsibleSection title="When to Use" icon={iconTarget} defaultOpen>
           <ul className="space-y-1.5">
             {pattern.whenToUse.map((item) => (
-              <li key={item} className="flex items-start gap-2 text-[12px] text-[var(--color-text-secondary)] leading-relaxed">
+              <li key={item} className="flex items-start gap-2 text-[13px] text-[var(--color-text-secondary)] leading-relaxed">
                 <span className="text-[var(--color-accent)] mt-1 shrink-0">&#x2022;</span>
                 {item}
               </li>
@@ -118,16 +227,14 @@ function PatternContentView({ pattern, onTryScenario }: PatternContentViewProps)
           </ul>
         </CollapsibleSection>
 
-        {/* Architecture */}
         <CollapsibleSection title="Architecture" icon={iconArch} defaultOpen>
           <MermaidDiagram source={pattern.architectureMermaid} />
         </CollapsibleSection>
 
-        {/* How It Works */}
         <CollapsibleSection title="How It Works" icon={iconSteps} defaultOpen>
           <ol className="space-y-2">
             {pattern.howItWorks.map((step, i) => (
-              <li key={step} className="flex items-start gap-2.5 text-[12px] text-[var(--color-text-secondary)] leading-relaxed">
+              <li key={step} className="flex items-start gap-2.5 text-[13px] text-[var(--color-text-secondary)] leading-relaxed">
                 <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--color-accent-light)] shrink-0 mt-0.5">
                   <span className="text-[10px] font-bold text-[var(--color-accent)] tabular-nums">
                     {i + 1}
@@ -139,35 +246,22 @@ function PatternContentView({ pattern, onTryScenario }: PatternContentViewProps)
           </ol>
         </CollapsibleSection>
 
-        {/* Node Roles */}
         <CollapsibleSection title="Node Roles" icon={iconNodes}>
           <div className="overflow-x-auto">
-            <table className="w-full text-[11px]">
+            <table className="w-full text-[12px]">
               <thead>
                 <tr className="border-b border-[var(--color-border-light)]">
-                  <th className="text-left py-1.5 pr-3 font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">
-                    Node
-                  </th>
-                  <th className="text-left py-1.5 pr-3 font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="text-left py-1.5 font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">
-                    Description
-                  </th>
+                  <th className="text-left py-1.5 pr-3 font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider text-[10px]">Node</th>
+                  <th className="text-left py-1.5 pr-3 font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider text-[10px]">Role</th>
+                  <th className="text-left py-1.5 font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider text-[10px]">Description</th>
                 </tr>
               </thead>
               <tbody>
                 {pattern.nodes.map((node) => (
                   <tr key={node.name} className="border-b border-[var(--color-border-light)] last:border-0">
-                    <td className="py-1.5 pr-3 font-mono text-[var(--color-accent)]">
-                      {node.name}
-                    </td>
-                    <td className="py-1.5 pr-3 text-[var(--color-text-secondary)]">
-                      {node.role}
-                    </td>
-                    <td className="py-1.5 text-[var(--color-text-tertiary)]">
-                      {node.description}
-                    </td>
+                    <td className="py-1.5 pr-3 font-mono text-[var(--color-accent)]">{node.name}</td>
+                    <td className="py-1.5 pr-3 text-[var(--color-text-secondary)]">{node.role}</td>
+                    <td className="py-1.5 text-[var(--color-text-tertiary)]">{node.description}</td>
                   </tr>
                 ))}
               </tbody>
@@ -175,16 +269,13 @@ function PatternContentView({ pattern, onTryScenario }: PatternContentViewProps)
           </div>
         </CollapsibleSection>
 
-        {/* Tradeoffs */}
         <CollapsibleSection title="Tradeoffs" icon={iconTradeoffs}>
           <div className="space-y-3">
             <div>
-              <h5 className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 mb-1.5">
-                Pros
-              </h5>
+              <h5 className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 mb-1.5">Pros</h5>
               <ul className="space-y-1">
                 {pattern.tradeoffs.pros.map((pro) => (
-                  <li key={pro} className="flex items-start gap-2 text-[11px] text-[var(--color-text-secondary)] leading-relaxed">
+                  <li key={pro} className="flex items-start gap-2 text-[12px] text-[var(--color-text-secondary)] leading-relaxed">
                     <span className="text-emerald-500 shrink-0 mt-0.5">&#x2713;</span>
                     {pro}
                   </li>
@@ -192,12 +283,10 @@ function PatternContentView({ pattern, onTryScenario }: PatternContentViewProps)
               </ul>
             </div>
             <div>
-              <h5 className="text-[10px] font-semibold uppercase tracking-wider text-amber-600 mb-1.5">
-                Cons
-              </h5>
+              <h5 className="text-[10px] font-semibold uppercase tracking-wider text-amber-600 mb-1.5">Cons</h5>
               <ul className="space-y-1">
                 {pattern.tradeoffs.cons.map((con) => (
-                  <li key={con} className="flex items-start gap-2 text-[11px] text-[var(--color-text-secondary)] leading-relaxed">
+                  <li key={con} className="flex items-start gap-2 text-[12px] text-[var(--color-text-secondary)] leading-relaxed">
                     <span className="text-amber-500 shrink-0 mt-0.5">&#x26A0;</span>
                     {con}
                   </li>
@@ -207,23 +296,40 @@ function PatternContentView({ pattern, onTryScenario }: PatternContentViewProps)
           </div>
         </CollapsibleSection>
 
-        {/* Try-it scenarios */}
-        <div className="pt-2">
-          <SuggestedPrompts scenarios={pattern.suggestedScenarios} onTryScenario={onTryScenario} />
-        </div>
+        {/* Simulate — inline controls */}
+        <CollapsibleSection title="Simulate" icon={iconRun} defaultOpen>
+          <div className="space-y-4">
+            <SuggestedPrompts scenarios={pattern.suggestedScenarios} onTryScenario={onTryScenario} />
+            <div className="border-t border-[var(--color-border-light)] pt-3">
+              <h5 className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)] mb-2">
+                Custom configuration
+              </h5>
+              <RunControls isRunning={isRunning} onRun={onRunCustom} onReset={onReset} />
+            </div>
+          </div>
+        </CollapsibleSection>
       </div>
     </div>
   );
 }
 
-/* ── LearnView (main export) ──────────────────────────────── */
+/* ── LearnView ──────────────────────────────────────────────── */
 
 interface LearnViewProps {
   selectedPattern: string | null;
   onTryScenario: (scenario: SuggestedScenario) => void;
+  onRunCustom: (config: ScenarioConfig) => void;
+  isRunning: boolean;
+  onReset: () => void;
 }
 
-export function LearnView({ selectedPattern, onTryScenario }: LearnViewProps) {
+export function LearnView({
+  selectedPattern,
+  onTryScenario,
+  onRunCustom,
+  isRunning,
+  onReset,
+}: LearnViewProps) {
   if (!selectedPattern) {
     return <PatternOverviewGrid />;
   }
@@ -233,5 +339,13 @@ export function LearnView({ selectedPattern, onTryScenario }: LearnViewProps) {
     return <PatternOverviewGrid />;
   }
 
-  return <PatternContentView pattern={content} onTryScenario={onTryScenario} />;
+  return (
+    <PatternContentView
+      pattern={content}
+      onTryScenario={onTryScenario}
+      onRunCustom={onRunCustom}
+      isRunning={isRunning}
+      onReset={onReset}
+    />
+  );
 }
