@@ -19,6 +19,7 @@ export interface TopologyEdge {
   to: string;
   active: boolean;
   requestCount: number;
+  lastRequestId?: string;
 }
 
 export interface PatternInfo {
@@ -33,6 +34,10 @@ export interface SimulationState {
   isRunning: boolean;
   error: string | null;
   events: SimulationEvent[];
+  /** The edge key ("from->to") that was most recently activated */
+  activeEdgeKey: string | null;
+  /** The node currently processing a request */
+  activeNodeId: string | null;
 }
 
 export const INITIAL_STATE: SimulationState = {
@@ -42,4 +47,6 @@ export const INITIAL_STATE: SimulationState = {
   isRunning: false,
   error: null,
   events: [],
+  activeEdgeKey: null,
+  activeNodeId: null,
 };

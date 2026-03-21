@@ -9,12 +9,14 @@ import {
   Position,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useEffect, memo } from "react";
+import { useEffect } from "react";
 import type { TopologyNode, TopologyEdge } from "../types.ts";
 
 interface TopologyViewProps {
   nodes: TopologyNode[];
   edges: TopologyEdge[];
+  activeEdgeKey?: string | null;
+  activeNodeId?: string | null;
 }
 
 const STATE_COLORS: Record<string, { border: string; bg: string; dot: string }> = {
@@ -25,10 +27,10 @@ const STATE_COLORS: Record<string, { border: string; bg: string; dot: string }> 
   failed: { border: "#dc2626", bg: "rgba(254, 226, 226, 0.6)", dot: "#dc2626" },
 };
 
-/** Custom node — NOT memoized so it re-renders on every data change */
 function SimulationNodeComponent({ data }: NodeProps) {
-  const nodeData = data as unknown as TopologyNode;
+  const nodeData = data as unknown as TopologyNode & { isActiveTarget: boolean };
   const colors = STATE_COLORS[nodeData.state] ?? STATE_COLORS["idle"];
+  const isTarget = nodeData.isActiveTarget;
 
   return (
     <div
@@ -40,8 +42,11 @@ function SimulationNodeComponent({ data }: NodeProps) {
         minWidth: 130,
         fontFamily: "system-ui, -apple-system, sans-serif",
         backdropFilter: "blur(12px)",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.03), 0 4px 16px rgba(0,0,0,0.02)",
-        transition: "border-color 0.3s, background 0.3s",
+        boxShadow: isTarget
+          ? `0 0 0 3px ${colors.border}33, 0 1px 2px rgba(0,0,0,0.03)`
+          : "0 1px 2px rgba(0,0,0,0.03), 0 4px 16px rgba(0,0,0,0.02)",
+        transition: "border-color 0.3s, background 0.3s, box-shadow 0.3s",
+        transform: isTarget ? "scale(1.03)" : "scale(1)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
@@ -53,7 +58,7 @@ function SimulationNodeComponent({ data }: NodeProps) {
             background: colors.dot,
             display: "inline-block",
             transition: "background 0.3s",
-            animation: nodeData.state === "active" ? "pulse 2s infinite" : undefined,
+            animation: nodeData.state === "active" || isTarget ? "pulse 1s infinite" : undefined,
           }}
         />
         <span style={{
@@ -88,7 +93,7 @@ function SimulationNodeComponent({ data }: NodeProps) {
 
 const nodeTypes = { simulation: SimulationNodeComponent };
 
-function layoutNodes(topologyNodes: TopologyNode[]): Node[] {
+function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null): Node[] {
   const spacing = 200;
   const totalWidth = (topologyNodes.length - 1) * spacing;
   const startX = -totalWidth / 2;
@@ -96,38 +101,49 @@ function layoutNodes(topologyNodes: TopologyNode[]): Node[] {
   return topologyNodes.map((tn, i) => ({
     id: tn.id,
     type: "simulation",
-    data: { ...tn },
+    data: { ...tn, isActiveTarget: tn.id === activeNodeId },
     position: { x: startX + i * spacing, y: 0 },
     sourcePosition: Position.Right,
     targetPosition: Position.Left,
   }));
 }
 
-function layoutEdges(topologyEdges: TopologyEdge[]): Edge[] {
-  return topologyEdges.map((te) => ({
-    id: `${te.from}->${te.to}`,
-    source: te.from,
-    target: te.to,
-    animated: te.active,
-    label: String(te.requestCount),
-    style: {
-      stroke: te.active ? "#2563eb" : "#cbd5e1",
-      strokeWidth: Math.min(1 + te.requestCount / 10, 3),
-    },
-    labelStyle: { fill: "#64748b", fontSize: 10, fontFamily: "ui-monospace, monospace" },
-    labelBgStyle: { fill: "rgba(255,255,255,0.7)" },
-    labelBgPadding: [4, 2] as [number, number],
-    labelBgBorderRadius: 4,
-  }));
+function layoutEdges(topologyEdges: TopologyEdge[], activeEdgeKey: string | null): Edge[] {
+  return topologyEdges.map((te) => {
+    const key = `${te.from}->${te.to}`;
+    const isActive = key === activeEdgeKey;
+
+    return {
+      id: key,
+      source: te.from,
+      target: te.to,
+      animated: isActive,
+      label: isActive ? `⚡ ${te.requestCount}` : String(te.requestCount),
+      style: {
+        stroke: isActive ? "#2563eb" : "#cbd5e1",
+        strokeWidth: isActive ? 3 : Math.min(1 + te.requestCount / 20, 2.5),
+        transition: "stroke 0.2s, stroke-width 0.2s",
+      },
+      labelStyle: {
+        fill: isActive ? "#2563eb" : "#64748b",
+        fontSize: isActive ? 11 : 10,
+        fontFamily: "ui-monospace, monospace",
+        fontWeight: isActive ? "600" : "400",
+      },
+      labelBgStyle: {
+        fill: isActive ? "rgba(219, 234, 254, 0.9)" : "rgba(255,255,255,0.7)",
+      },
+      labelBgPadding: [4, 2] as [number, number],
+      labelBgBorderRadius: 4,
+    };
+  });
 }
 
-function TopologyInner({ nodes, edges }: TopologyViewProps) {
-  // No useMemo — recalculate every render so React Flow sees data changes
-  const flowNodes = layoutNodes(nodes);
-  const flowEdges = layoutEdges(edges);
+function TopologyInner({ nodes, edges, activeEdgeKey, activeNodeId }: TopologyViewProps) {
+  const flowNodes = layoutNodes(nodes, activeNodeId ?? null);
+  const flowEdges = layoutEdges(edges, activeEdgeKey ?? null);
   const { fitView } = useReactFlow();
 
-  // Fit view when nodes first appear
   useEffect(() => {
     if (nodes.length > 0) {
       const timer = setTimeout(() => fitView({ padding: 0.3, duration: 200 }), 50);
@@ -153,7 +169,7 @@ function TopologyInner({ nodes, edges }: TopologyViewProps) {
   );
 }
 
-export function TopologyView({ nodes, edges }: TopologyViewProps) {
+export function TopologyView({ nodes, edges, activeEdgeKey, activeNodeId }: TopologyViewProps) {
   if (nodes.length === 0) {
     return null;
   }
@@ -161,7 +177,7 @@ export function TopologyView({ nodes, edges }: TopologyViewProps) {
   return (
     <div className="flex-1 animate-fade-in" style={{ minHeight: 220 }}>
       <ReactFlowProvider>
-        <TopologyInner nodes={nodes} edges={edges} />
+        <TopologyInner nodes={nodes} edges={edges} activeEdgeKey={activeEdgeKey} activeNodeId={activeNodeId} />
       </ReactFlowProvider>
     </div>
   );

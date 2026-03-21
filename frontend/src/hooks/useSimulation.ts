@@ -54,6 +54,7 @@ export function reduceEvent(
     case "processing":
       return {
         ...state,
+        activeNodeId: event.node,
         events: [...state.events, event],
       };
 
@@ -65,10 +66,12 @@ export function reduceEvent(
       if (existingEdge) {
         return {
           ...state,
+          activeEdgeKey: edgeKey,
+          activeNodeId: event.to,
           edges: state.edges.map((e) =>
             `${e.from}->${e.to}` === edgeKey
-              ? { ...e, active: true, requestCount: e.requestCount + 1 }
-              : e,
+              ? { ...e, active: true, requestCount: e.requestCount + 1, lastRequestId: event.requestId }
+              : { ...e, active: false },
           ),
           events: [...state.events, event],
         };
@@ -78,10 +81,13 @@ export function reduceEvent(
         to: event.to,
         active: true,
         requestCount: 1,
+        lastRequestId: event.requestId,
       };
       return {
         ...state,
-        edges: [...state.edges, newEdge],
+        activeEdgeKey: edgeKey,
+        activeNodeId: event.to,
+        edges: [...state.edges.map((e) => ({ ...e, active: false })), newEdge],
         events: [...state.events, event],
       };
     }
@@ -147,6 +153,9 @@ export function reduceEvent(
         ...state,
         isRunning: false,
         metrics: event.aggregateMetrics,
+        activeEdgeKey: null,
+        activeNodeId: null,
+        edges: state.edges.map((e) => ({ ...e, active: false })),
         events: [...state.events, event],
       };
 
