@@ -5,7 +5,6 @@ import { TopologyView } from "./components/TopologyView.tsx";
 import { MetricsPanel } from "./components/MetricsPanel.tsx";
 import { EventLog } from "./components/EventLog.tsx";
 import { LearnView } from "./components/LearnView.tsx";
-import { SimulationFlowSummary } from "./components/SimulationFlowSummary.tsx";
 import type { ScenarioConfig } from "./types.ts";
 import type { SuggestedScenario } from "./data/pattern-content.ts";
 
@@ -99,15 +98,6 @@ export function App() {
               </>
             )}
           </div>
-          {state.nodes.length > 0 && (
-            <div className="shrink-0 glass-strong rounded-2xl overflow-hidden">
-              <SimulationFlowSummary
-                nodes={state.nodes}
-                edges={state.edges}
-                isRunning={state.isRunning}
-              />
-            </div>
-          )}
           {state.error && !state.isRunning && (
             <div className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 animate-fade-in">
               {state.error}
