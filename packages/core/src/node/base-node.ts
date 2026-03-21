@@ -103,7 +103,7 @@ export abstract class BaseNode {
       }
 
       const result = await this.process(request, emitter);
-      const durationMs = Date.now() - startTime;
+      const durationMs = this.clock.now() - startTime;
       this.totalLatencyMs += durationMs;
       this.totalHandled++;
       return {
@@ -121,7 +121,7 @@ export abstract class BaseNode {
         message,
         recoverable: true,
       });
-      const durationMs = Date.now() - startTime;
+      const durationMs = this.clock.now() - startTime;
       this.totalLatencyMs += durationMs;
       return {
         output: "error",

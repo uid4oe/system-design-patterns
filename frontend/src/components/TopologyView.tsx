@@ -136,7 +136,7 @@ function layoutHubSpoke(
 ): Node[] {
   const hub = topologyNodes[hubIdx];
   const spokes = topologyNodes.filter((_, i) => i !== hubIdx);
-  const spokeSpacing = 80;
+  const spokeSpacing = 110;
   const totalSpokeHeight = (spokes.length - 1) * spokeSpacing;
 
   const result: Node[] = [];
@@ -146,7 +146,7 @@ function layoutHubSpoke(
       id: hub.id,
       type: "simulation",
       data: { ...hub, isActiveTarget: hub.id === activeNodeId },
-      position: { x: -120, y: 0 },
+      position: { x: -160, y: 0 },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
     });
@@ -157,7 +157,7 @@ function layoutHubSpoke(
       id: tn.id,
       type: "simulation",
       data: { ...tn, isActiveTarget: tn.id === activeNodeId },
-      position: { x: 120, y: -totalSpokeHeight / 2 + i * spokeSpacing },
+      position: { x: 160, y: -totalSpokeHeight / 2 + i * spokeSpacing },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
     });
