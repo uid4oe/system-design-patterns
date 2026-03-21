@@ -103,7 +103,18 @@ function SimulationNodeComponent({ data }: NodeProps) {
 const nodeTypes = { simulation: SimulationNodeComponent };
 
 function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null): Node[] {
-  const spacing = 200;
+  // For patterns with an orchestrator/coordinator, use hub layout
+  // Otherwise use horizontal layout
+  const orchestratorIdx = topologyNodes.findIndex(
+    (n) => n.role === "saga-orchestrator" || n.role === "circuit-breaker" || n.role === "coordinator",
+  );
+
+  if (orchestratorIdx >= 0 && topologyNodes.length > 3) {
+    return layoutHubSpoke(topologyNodes, orchestratorIdx, activeNodeId);
+  }
+
+  // Simple horizontal for small topologies (≤3 nodes)
+  const spacing = 180;
   const totalWidth = (topologyNodes.length - 1) * spacing;
   const startX = -totalWidth / 2;
 
@@ -115,6 +126,44 @@ function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null)
     sourcePosition: Position.Right,
     targetPosition: Position.Left,
   }));
+}
+
+/** Hub-and-spoke layout: orchestrator on the left, services in a column on the right */
+function layoutHubSpoke(
+  topologyNodes: TopologyNode[],
+  hubIdx: number,
+  activeNodeId: string | null,
+): Node[] {
+  const hub = topologyNodes[hubIdx];
+  const spokes = topologyNodes.filter((_, i) => i !== hubIdx);
+  const spokeSpacing = 80;
+  const totalSpokeHeight = (spokes.length - 1) * spokeSpacing;
+
+  const result: Node[] = [];
+
+  if (hub) {
+    result.push({
+      id: hub.id,
+      type: "simulation",
+      data: { ...hub, isActiveTarget: hub.id === activeNodeId },
+      position: { x: -120, y: 0 },
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    });
+  }
+
+  spokes.forEach((tn, i) => {
+    result.push({
+      id: tn.id,
+      type: "simulation",
+      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      position: { x: 120, y: -totalSpokeHeight / 2 + i * spokeSpacing },
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    });
+  });
+
+  return result;
 }
 
 function layoutEdges(topologyEdges: TopologyEdge[], activeEdgeKey: string | null): Edge[] {
