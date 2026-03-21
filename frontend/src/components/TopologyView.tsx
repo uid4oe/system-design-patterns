@@ -113,6 +113,11 @@ function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null)
     return layoutHubSpoke(topologyNodes, orchestratorIdx, activeNodeId);
   }
 
+  // For >3 nodes without hub, use 2-row grid
+  if (topologyNodes.length > 3) {
+    return layoutGrid(topologyNodes, activeNodeId);
+  }
+
   // Simple horizontal for small topologies (≤3 nodes)
   const spacing = 240;
   const totalWidth = (topologyNodes.length - 1) * spacing;
@@ -126,6 +131,31 @@ function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null)
     sourcePosition: Position.Right,
     targetPosition: Position.Left,
   }));
+}
+
+/** Grid layout for topologies without a central hub (e.g. CQRS dual paths) */
+function layoutGrid(
+  topologyNodes: TopologyNode[],
+  activeNodeId: string | null,
+): Node[] {
+  const cols = Math.ceil(topologyNodes.length / 2);
+  const spacingX = 200;
+  const spacingY = 120;
+  const totalWidth = (cols - 1) * spacingX;
+  const startX = -totalWidth / 2;
+
+  return topologyNodes.map((tn, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    return {
+      id: tn.id,
+      type: "simulation",
+      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      position: { x: startX + col * spacingX, y: -spacingY / 2 + row * spacingY },
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    };
+  });
 }
 
 /** Hub-and-spoke layout: orchestrator on the left, services in a column on the right */

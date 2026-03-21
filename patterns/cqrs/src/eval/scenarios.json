@@ -1,0 +1,22 @@
+{
+  "name": "cqrs-eval",
+  "scenarios": [
+    {
+      "name": "balanced_load",
+      "config": { "requestCount": 30, "requestsPerSecond": 10, "seed": 1 },
+      "criteria": [
+        { "name": "error_rate", "threshold": 0.05, "comparator": "lt", "weight": 1 }
+      ]
+    },
+    {
+      "name": "event_store_failure",
+      "config": {
+        "requestCount": 20, "requestsPerSecond": 5, "seed": 2,
+        "failureInjection": { "nodeFailures": { "event-store": 0.5 } }
+      },
+      "criteria": [
+        { "name": "error_rate", "threshold": 0.1, "comparator": "gt", "weight": 1 }
+      ]
+    }
+  ]
+}

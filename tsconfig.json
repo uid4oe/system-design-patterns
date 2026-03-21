@@ -5,6 +5,7 @@
     { "path": "server" },
     { "path": "frontend" },
     { "path": "patterns/circuit-breaker" },
-    { "path": "patterns/saga" }
+    { "path": "patterns/saga" },
+    { "path": "patterns/cqrs" }
   ]
 }

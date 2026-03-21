@@ -208,7 +208,72 @@ const saga: PatternContent = {
   ],
 };
 
+const cqrs: PatternContent = {
+  name: "cqrs",
+  icon: "📋",
+  tagline: "Command/Query separation with event sourcing",
+  description:
+    "Separates read and write operations into different models. Commands modify state via an event store and projector. Queries read from a pre-built read model optimized for fast retrieval. This enables independent scaling — writes can be consistent while reads are eventually consistent but fast.",
+  whenToUse: [
+    "Systems with vastly different read vs write loads (e.g. 100:1 read:write ratio)",
+    "When read and write models need different data shapes or optimizations",
+    "Event sourcing architectures where you need derived read views",
+    "Microservices needing independent scaling of query and command paths",
+  ],
+  architectureMermaid: `graph LR
+    Client[Client] -->|write| CmdSvc[Command Service]
+    CmdSvc --> ES[Event Store]
+    ES --> Proj[Projector]
+    Proj --> RM[Read Model]
+    Client -->|read| QSvc[Query Service]
+    QSvc --> RM`,
+  howItWorks: [
+    "Each request is classified as a write (command) or read (query) — the simulation uses a 50/50 split by default",
+    "Write path: Client → Command Service (validates) → Event Store (appends event) → Projector (updates read model). This is the slow, consistent path.",
+    "Read path: Client → Query Service → Read Model. This is the fast path — reads from pre-built projections.",
+    "The Projector runs after each write, introducing a 'projection lag' between when data is written and when it's available for reads",
+    "Key tradeoff: reads are fast and scalable, but may serve slightly stale data (eventual consistency)",
+  ],
+  nodes: [
+    { name: "command-svc", role: "command-handler", description: "Validates write commands, enforces business rules" },
+    { name: "event-store", role: "event-store", description: "Append-only log of all state changes (events)" },
+    { name: "projector", role: "projector", description: "Reads events and builds optimized read model" },
+    { name: "read-model", role: "read-model", description: "Pre-computed view optimized for fast queries" },
+    { name: "query-svc", role: "query-handler", description: "Routes read queries to the read model" },
+  ],
+  tradeoffs: {
+    pros: [
+      "Independent scaling — add read replicas without touching write path",
+      "Optimized data models — reads and writes use different schemas",
+      "Event sourcing provides full audit trail and time-travel debugging",
+      "Read path is extremely fast (pre-computed projections)",
+    ],
+    cons: [
+      "Eventual consistency — reads may return stale data",
+      "Increased complexity — two data models, event store, projector to maintain",
+      "Projection lag can cause confusion (write then immediate read returns old data)",
+      "Event schema evolution is difficult once events are persisted",
+    ],
+  },
+  suggestedScenarios: [
+    {
+      label: "Balanced load",
+      description: "50/50 read/write mix — observe both data paths and consistency lag",
+      requestCount: 20,
+      requestsPerSecond: 5,
+    },
+    {
+      label: "Event store failure",
+      description: "Event store fails 50% — writes fail but reads continue serving",
+      requestCount: 15,
+      requestsPerSecond: 3,
+      failureInjection: { nodeFailures: { "event-store": 0.5 } },
+    },
+  ],
+};
+
 export const PATTERN_CONTENT: Record<string, PatternContent> = {
   "circuit-breaker": circuitBreaker,
   saga,
+  cqrs,
 };
