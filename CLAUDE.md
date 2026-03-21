@@ -174,7 +174,7 @@ docker compose up                        # server + frontend
 - [x] Step 3: Frontend Shell (11 tests — SSE parsing, event reduction, React Flow topology)
 - [x] Step 4a: Circuit Breaker Pattern (15 tests — state machine path verification, fast-fail, probe mechanics)
 - [x] Step 4b: Saga Pattern (12 tests — orchestrated compensation, reverse ordering, rollback metrics)
-- [ ] Step 4c: CQRS Pattern
+- [x] Step 4c: CQRS Pattern (11 tests — dual read/write paths, event store, projection lag, failure propagation)
 - [ ] Step 4d: Load Balancer Pattern
 - [ ] Step 4e: Pub/Sub Pattern
 - [ ] Step 4f: Bulkhead Pattern
