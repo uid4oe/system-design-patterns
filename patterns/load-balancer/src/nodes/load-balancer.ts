@@ -90,14 +90,29 @@ export class LoadBalancerNode extends BaseNode {
       const fails = (this.consecutiveFailures.get(target.name) ?? 0) + 1;
       this.consecutiveFailures.set(target.name, fails);
 
-      if (fails >= this.failureThreshold) {
+      if (fails >= this.failureThreshold && !this.markedUnhealthy.has(target.name)) {
         this.markedUnhealthy.add(target.name);
         emitter.emit({
           type: "node_state_change",
           node: target.name,
           from: "active",
           to: "failed",
-          reason: `${fails} consecutive failures`,
+          reason: `${fails} consecutive failures — removed from rotation`,
+        });
+        // Emit metric showing how many backends remain healthy
+        const healthyCount = this.backends.length - this.markedUnhealthy.size;
+        emitter.emit({
+          type: "metric",
+          name: "healthy_backends",
+          value: healthyCount,
+          unit: "count",
+          node: this.name,
+        });
+        emitter.emit({
+          type: "processing",
+          node: this.name,
+          requestId: request.id,
+          detail: `⚠ ${target.name} removed — ${healthyCount} backends remaining`,
         });
       }
     }

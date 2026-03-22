@@ -196,30 +196,39 @@ function layoutHubSpoke(
   return result;
 }
 
-function layoutEdges(topologyEdges: TopologyEdge[], activeEdgeKey: string | null): Edge[] {
+function layoutEdges(
+  topologyEdges: TopologyEdge[],
+  activeEdgeKey: string | null,
+  nodeStates: Map<string, TopologyNode["state"]>,
+): Edge[] {
   return topologyEdges.map((te) => {
     const key = `${te.from}->${te.to}`;
     const isActive = key === activeEdgeKey;
+    const targetState = nodeStates.get(te.to);
+    const isFailed = targetState === "failed";
 
     return {
       id: key,
       source: te.from,
       target: te.to,
-      animated: isActive,
-      label: isActive ? `⚡ ${te.requestCount}` : String(te.requestCount),
+      animated: isActive && !isFailed,
+      label: isFailed ? `✕ ${te.requestCount}` : isActive ? `⚡ ${te.requestCount}` : String(te.requestCount),
       style: {
-        stroke: isActive ? "#2563eb" : "#cbd5e1",
-        strokeWidth: isActive ? 3 : Math.min(1 + te.requestCount / 20, 2.5),
-        transition: "stroke 0.2s, stroke-width 0.2s",
+        stroke: isFailed ? "#dc2626" : isActive ? "#2563eb" : "#cbd5e1",
+        strokeWidth: isActive && !isFailed ? 3 : Math.min(1 + te.requestCount / 20, 2.5),
+        strokeDasharray: isFailed ? "6 4" : undefined,
+        opacity: isFailed ? 0.4 : 1,
+        transition: "stroke 0.2s, stroke-width 0.2s, opacity 0.3s",
       },
       labelStyle: {
-        fill: isActive ? "#2563eb" : "#64748b",
+        fill: isFailed ? "#dc2626" : isActive ? "#2563eb" : "#64748b",
         fontSize: isActive ? 11 : 10,
         fontFamily: "ui-monospace, monospace",
         fontWeight: isActive ? "600" : "400",
+        opacity: isFailed ? 0.5 : 1,
       },
       labelBgStyle: {
-        fill: isActive ? "rgba(219, 234, 254, 0.9)" : "rgba(255,255,255,0.7)",
+        fill: isFailed ? "rgba(254, 226, 226, 0.9)" : isActive ? "rgba(219, 234, 254, 0.9)" : "rgba(255,255,255,0.7)",
       },
       labelBgPadding: [4, 2] as [number, number],
       labelBgBorderRadius: 4,
@@ -229,7 +238,8 @@ function layoutEdges(topologyEdges: TopologyEdge[], activeEdgeKey: string | null
 
 function TopologyInner({ nodes, edges, activeEdgeKey, activeNodeId }: TopologyViewProps) {
   const flowNodes = layoutNodes(nodes, activeNodeId ?? null);
-  const flowEdges = layoutEdges(edges, activeEdgeKey ?? null);
+  const nodeStates = new Map(nodes.map((n) => [n.id, n.state]));
+  const flowEdges = layoutEdges(edges, activeEdgeKey ?? null, nodeStates);
 
   return (
     <ReactFlow
