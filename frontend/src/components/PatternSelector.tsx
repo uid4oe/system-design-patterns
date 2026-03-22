@@ -29,9 +29,6 @@ export function PatternSelector({
         if (!cancelled) {
           setPatterns(data);
           setLoading(false);
-          if (!selected && data.length > 0 && data[0]) {
-            onSelect(data[0].name);
-          }
         }
       } catch (err: unknown) {
         if (!cancelled) {
