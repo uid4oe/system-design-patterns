@@ -6,6 +6,7 @@ import { LoadBalancerNode } from "../nodes/load-balancer.js";
 import { createSimulator } from "../index.js";
 
 type RequestFlow = Extract<SimulationEvent, { type: "request_flow" }>;
+type StateChange = Extract<SimulationEvent, { type: "node_state_change" }>;
 
 function createBackends(clock: SimulationClock, count = 4) {
   return Array.from({ length: count }, (_, i) =>
@@ -36,36 +37,64 @@ describe("LoadBalancerNode", () => {
     }
 
     const counts = lb.getRequestCounts();
-    // 8 requests / 4 backends = 2 each
     expect(counts.get("backend-1")).toBe(2);
     expect(counts.get("backend-2")).toBe(2);
     expect(counts.get("backend-3")).toBe(2);
     expect(counts.get("backend-4")).toBe(2);
   });
 
-  it("round-robin skips failed backends", async () => {
+  it("detects unhealthy backend after consecutive failures and stops routing to it", async () => {
     const clock = new SimulationClock();
     const emitter = new CollectingEmitter();
     const backends = createBackends(clock);
     backends[2]?.setFailureRate(1.0); // backend-3 always fails
 
     const lb = new LoadBalancerNode(
-      { name: "lb", algorithm: "round-robin", backends },
+      { name: "lb", algorithm: "round-robin", backends, failureThreshold: 2 },
       50, clock,
     );
 
-    // Send requests — backend-3 will fail when hit, others succeed
+    // Send 12 requests
     for (let i = 0; i < 12; i++) {
       await lb.run(makeRequest(`r${i}`), emitter);
     }
 
+    // backend-3 should be marked unhealthy after 2 consecutive failures
+    expect(lb.getUnhealthyBackends().has("backend-3")).toBe(true);
+
+    // backend-3 should have received exactly 2 requests (threshold)
+    // then all subsequent requests go to remaining 3 backends
     const counts = lb.getRequestCounts();
-    // All 4 backends get requests (RR doesn't skip by failure rate,
-    // it routes to all — the backend itself fails)
-    expect(counts.get("backend-1")).toBe(3);
-    expect(counts.get("backend-2")).toBe(3);
-    expect(counts.get("backend-3")).toBe(3);
-    expect(counts.get("backend-4")).toBe(3);
+    expect(counts.get("backend-3")).toBe(2);
+
+    // Remaining backends should have absorbed the extra load
+    const otherTotal = (counts.get("backend-1") ?? 0) +
+      (counts.get("backend-2") ?? 0) +
+      (counts.get("backend-4") ?? 0);
+    expect(otherTotal).toBe(10);
+  });
+
+  it("emits node_state_change when backend marked unhealthy", async () => {
+    const clock = new SimulationClock();
+    const emitter = new CollectingEmitter();
+    const backends = createBackends(clock);
+    backends[0]?.setFailureRate(1.0);
+
+    const lb = new LoadBalancerNode(
+      { name: "lb", algorithm: "round-robin", backends, failureThreshold: 2 },
+      50, clock,
+    );
+
+    for (let i = 0; i < 8; i++) {
+      await lb.run(makeRequest(`r${i}`), emitter);
+    }
+
+    const stateChanges = emitter.events
+      .filter((e): e is StateChange => e.type === "node_state_change")
+      .filter((e) => e.node === "backend-1");
+
+    expect(stateChanges.length).toBeGreaterThan(0);
+    expect(stateChanges.some((e) => e.to === "failed")).toBe(true);
   });
 
   it("consistent-hash routes same ID to same backend", async () => {
@@ -77,9 +106,8 @@ describe("LoadBalancerNode", () => {
       50, clock,
     );
 
-    // Same request ID should go to same backend
-    const result1 = await lb.run(makeRequest("same-key"), emitter);
-    const result2 = await lb.run(makeRequest("same-key"), emitter);
+    await lb.run(makeRequest("same-key"), emitter);
+    await lb.run(makeRequest("same-key"), emitter);
 
     const flows = emitter.events
       .filter((e): e is RequestFlow => e.type === "request_flow" && e.from === "lb");
@@ -116,6 +144,28 @@ describe("LoadBalancerNode", () => {
     expect(result.success).toBe(false);
     expect(result.output).toBe("no-backend");
   });
+
+  it("returns error when all backends marked unhealthy", async () => {
+    const clock = new SimulationClock();
+    const emitter = new CollectingEmitter();
+    const backends = createBackends(clock, 2);
+    backends[0]?.setFailureRate(1.0);
+    backends[1]?.setFailureRate(1.0);
+
+    const lb = new LoadBalancerNode(
+      { name: "lb", algorithm: "round-robin", backends, failureThreshold: 1 },
+      50, clock,
+    );
+
+    // First 2 requests fail and mark both unhealthy
+    await lb.run(makeRequest("r1"), emitter);
+    await lb.run(makeRequest("r2"), emitter);
+
+    // Third request has no healthy backends
+    const result = await lb.run(makeRequest("r3"), emitter);
+    expect(result.success).toBe(false);
+    expect(result.output).toBe("no-backend");
+  });
 });
 
 describe("Load Balancer Simulator", () => {
@@ -131,7 +181,6 @@ describe("Load Balancer Simulator", () => {
     const metrics = emitter.getAggregateMetrics();
     expect(metrics?.successCount).toBe(20);
 
-    // All 4 backends should have received requests
     for (let i = 1; i <= 4; i++) {
       const count = emitter.getMetricValue(`backend-${i}_requests`);
       expect(count).toBeGreaterThan(0);
@@ -149,11 +198,10 @@ describe("Load Balancer Simulator", () => {
 
     const stddev = emitter.getMetricValue("request_spread_stddev");
     expect(stddev).toBeDefined();
-    // 20 requests / 4 backends = 5 each, stddev should be near 0
     expect(stddev).toBeLessThan(2);
   });
 
-  it("handles backend failure gracefully", async () => {
+  it("handles backend failure — stops routing to failed backend", async () => {
     const emitter = new CollectingEmitter();
     const simulator = createSimulator();
 
@@ -168,10 +216,9 @@ describe("Load Balancer Simulator", () => {
     );
 
     const metrics = emitter.getAggregateMetrics();
-    // Some requests fail (those routed to backend-3)
+    // First 2 requests to backend-3 fail (threshold), rest succeed
     expect(metrics?.errorCount).toBeGreaterThan(0);
-    // But most succeed (those routed to other backends)
-    expect(metrics?.successCount).toBeGreaterThan(0);
+    expect(metrics?.successCount).toBeGreaterThan(metrics?.errorCount ?? 0);
   });
 
   it("emits proper event envelope", async () => {
@@ -183,7 +230,6 @@ describe("Load Balancer Simulator", () => {
       emitter,
     );
 
-    // First 5: node_start for lb + 4 backends
     const firstFive = emitter.events.slice(0, 5);
     expect(firstFive.every((e) => e.type === "node_start")).toBe(true);
 

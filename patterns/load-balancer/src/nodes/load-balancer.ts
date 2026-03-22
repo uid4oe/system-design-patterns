@@ -13,17 +13,23 @@ interface LoadBalancerConfig {
   name: string;
   algorithm: LBAlgorithm;
   backends: LBBackendNode[];
+  /** Consecutive failures before marking a backend unhealthy. Default 2. */
+  failureThreshold?: number;
 }
 
 /**
  * Load balancer distributing requests across backends using one of
- * three algorithms: round-robin, least-connections, or consistent-hash.
+ * three algorithms. Tracks per-backend failures and excludes backends
+ * that exceed the consecutive failure threshold.
  */
 export class LoadBalancerNode extends BaseNode {
   private readonly backends: LBBackendNode[];
   private readonly algorithm: LBAlgorithm;
+  private readonly failureThreshold: number;
   private rrIndex = 0;
   private readonly requestCounts = new Map<string, number>();
+  private readonly consecutiveFailures = new Map<string, number>();
+  private readonly markedUnhealthy = new Set<string>();
 
   constructor(config: LoadBalancerConfig, seed = 0, clock?: SimulationClock, realTime = false) {
     super(
@@ -34,6 +40,7 @@ export class LoadBalancerNode extends BaseNode {
     );
     this.backends = config.backends;
     this.algorithm = config.algorithm;
+    this.failureThreshold = config.failureThreshold ?? 2;
   }
 
   protected async process(
@@ -71,15 +78,37 @@ export class LoadBalancerNode extends BaseNode {
       label: this.algorithm,
     });
 
-    // Track per-backend request counts
     const count = (this.requestCounts.get(target.name) ?? 0) + 1;
     this.requestCounts.set(target.name, count);
 
-    return target.run(request, emitter);
+    const result = await target.run(request, emitter);
+
+    // Track failures to detect unhealthy backends
+    if (result.success) {
+      this.consecutiveFailures.set(target.name, 0);
+    } else {
+      const fails = (this.consecutiveFailures.get(target.name) ?? 0) + 1;
+      this.consecutiveFailures.set(target.name, fails);
+
+      if (fails >= this.failureThreshold) {
+        this.markedUnhealthy.add(target.name);
+        emitter.emit({
+          type: "node_state_change",
+          node: target.name,
+          from: "active",
+          to: "failed",
+          reason: `${fails} consecutive failures`,
+        });
+      }
+    }
+
+    return result;
   }
 
   private selectBackend(request: SimulationRequest): LBBackendNode | undefined {
-    const healthy = this.backends.filter((b) => b.isHealthy());
+    const healthy = this.backends.filter(
+      (b) => !this.markedUnhealthy.has(b.name),
+    );
     if (healthy.length === 0) return undefined;
 
     switch (this.algorithm) {
@@ -120,5 +149,9 @@ export class LoadBalancerNode extends BaseNode {
 
   getAlgorithm(): LBAlgorithm {
     return this.algorithm;
+  }
+
+  getUnhealthyBackends(): Set<string> {
+    return new Set(this.markedUnhealthy);
   }
 }

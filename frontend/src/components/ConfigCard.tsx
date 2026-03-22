@@ -6,7 +6,7 @@ const FAILURE_TARGET: Record<string, string> = {
   "circuit-breaker": "backend",
   saga: "inventory",
   cqrs: "event-store",
-  "load-balancer": "backend",
+  "load-balancer": "backend-3",
   "pub-sub": "broker",
   bulkhead: "backend",
   "rate-limiter": "backend",
