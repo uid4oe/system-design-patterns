@@ -136,6 +136,7 @@ export function App() {
                 <button
                   type="button"
                   onClick={reset}
+                  aria-label="Cancel simulation"
                   className="shrink-0 rounded-lg px-2.5 py-1 text-[12px] font-medium text-red-600 hover:bg-red-50 transition-all"
                 >
                   Cancel

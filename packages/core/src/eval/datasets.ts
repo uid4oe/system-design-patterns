@@ -82,10 +82,14 @@ export function loadDataset(path: string): EvalDataset {
         );
       }
     }
-    scenarios.push(scenario as unknown as EvalScenario);
+    scenarios.push({
+      name: scenario["name"] as string,
+      config: scenario["config"] as unknown as EvalScenario["config"],
+      criteria: scenario["criteria"] as EvalCriteria[],
+    });
   }
 
-  return { name: data["name"] as string, scenarios };
+  return { name: String(data["name"]), scenarios };
 }
 
 /** Score a metric value against a criterion. */

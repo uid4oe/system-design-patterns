@@ -108,6 +108,7 @@ export function ConfigCard({ isRunning, patternName, onRun, onReset }: ConfigCar
               })
             }
             disabled={isRunning}
+            aria-label="Run simulation"
             className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-1.5 text-[12px] font-medium text-white hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm shadow-blue-500/15"
           >
             {isRunning ? (
@@ -122,6 +123,7 @@ export function ConfigCard({ isRunning, patternName, onRun, onReset }: ConfigCar
           {!isRunning && (
             <button
               onClick={onReset}
+              aria-label="Reset simulation"
               className="rounded-xl px-3 py-1.5 text-[12px] font-medium text-[var(--color-text-tertiary)] hover:bg-black/[0.03] transition-all"
             >
               Reset
