@@ -17,7 +17,7 @@ Educational project demonstrating 7 system design and distribution patterns with
 ## Quick Start
 
 ```bash
-git clone https://github.com/your-org/design-patterns.git
+git clone https://github.com/uid4oe/design-patterns.git
 cd design-patterns
 
 npm install

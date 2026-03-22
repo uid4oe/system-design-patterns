@@ -52,7 +52,7 @@ export function App() {
           Design Patterns
         </span>
         <a
-          href="https://github.com"
+          href="https://github.com/uid4oe/design-patterns"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors"
