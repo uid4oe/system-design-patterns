@@ -111,6 +111,12 @@ function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null)
     return layoutPubSub(topologyNodes, brokerIdx, activeNodeId);
   }
 
+  // Bulkhead: gateway left, pools center, services right
+  const gatewayIdx = topologyNodes.findIndex((n) => n.role === "gateway");
+  if (gatewayIdx >= 0 && topologyNodes.length > 3) {
+    return layoutThreeColumn(topologyNodes, gatewayIdx, activeNodeId);
+  }
+
   const orchestratorIdx = topologyNodes.findIndex(
     (n) => n.role === "saga-orchestrator" || n.role === "circuit-breaker" || n.role === "coordinator" || n.role === "load-balancer",
   );
@@ -194,6 +200,64 @@ function layoutHubSpoke(
       type: "simulation",
       data: { ...tn, isActiveTarget: tn.id === activeNodeId },
       position: { x: 160, y: -totalSpokeHeight / 2 + i * spokeSpacing },
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    });
+  });
+
+  return result;
+}
+
+/** 3-column layout: single node left, middle tier center, backend tier right */
+function layoutThreeColumn(
+  topologyNodes: TopologyNode[],
+  leftIdx: number,
+  activeNodeId: string | null,
+): Node[] {
+  const leftNode = topologyNodes[leftIdx];
+  const middleTier = topologyNodes.filter(
+    (n) => n.role === "thread-pool" || n.role === "pool",
+  );
+  const rightTier = topologyNodes.filter(
+    (_, i) => i !== leftIdx && !middleTier.includes(topologyNodes[i] as TopologyNode),
+  );
+
+  const result: Node[] = [];
+  const spacing = 100;
+
+  // Left node (gateway)
+  if (leftNode) {
+    result.push({
+      id: leftNode.id,
+      type: "simulation",
+      data: { ...leftNode, isActiveTarget: leftNode.id === activeNodeId },
+      position: { x: -280, y: 0 },
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    });
+  }
+
+  // Middle tier (pools)
+  const midHeight = (middleTier.length - 1) * spacing;
+  middleTier.forEach((tn, i) => {
+    result.push({
+      id: tn.id,
+      type: "simulation",
+      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      position: { x: 0, y: -midHeight / 2 + i * spacing },
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    });
+  });
+
+  // Right tier (services)
+  const rightHeight = (rightTier.length - 1) * spacing;
+  rightTier.forEach((tn, i) => {
+    result.push({
+      id: tn.id,
+      type: "simulation",
+      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      position: { x: 280, y: -rightHeight / 2 + i * spacing },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
     });
