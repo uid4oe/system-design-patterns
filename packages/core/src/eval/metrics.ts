@@ -1,4 +1,4 @@
-import type { AggregateMetrics } from "../stream/types.js";
+import type { AggregateMetrics, SimulationEmitter } from "../stream/types.js";
 
 /**
  * Collects per-request metrics and computes aggregate statistics
@@ -41,7 +41,30 @@ export class MetricCollector {
     this.errorCount++;
   }
 
-  /** Compute aggregate metrics from collected data. */
+  /** Emit live p50/p99/throughput metric events. Call after each request. */
+  emitSnapshot(emitter: SimulationEmitter, currentTimeMs: number): void {
+    const snap = this.snapshot(currentTimeMs);
+    emitter.emit({ type: "metric", name: "p50_latency_ms", value: snap.p50LatencyMs, unit: "ms" });
+    emitter.emit({ type: "metric", name: "p99_latency_ms", value: snap.p99LatencyMs, unit: "ms" });
+    emitter.emit({ type: "metric", name: "throughput_rps", value: snap.throughputRps, unit: "rps" });
+  }
+
+  /** Get a snapshot of current metrics (for live updates during simulation). */
+  snapshot(currentTimeMs?: number): AggregateMetrics {
+    const endTime = currentTimeMs ?? this.endTimeMs;
+    const durationSec = Math.max((endTime - this.startTimeMs) / 1000, 0.001);
+
+    return {
+      totalRequests: this.successCount + this.errorCount,
+      successCount: this.successCount,
+      errorCount: this.errorCount,
+      p50LatencyMs: this.percentile(50),
+      p99LatencyMs: this.percentile(99),
+      throughputRps: Math.round((this.successCount + this.errorCount) / durationSec),
+    };
+  }
+
+  /** Compute final aggregate metrics. */
   getAggregateMetrics(): AggregateMetrics {
     const durationSec = Math.max(
       (this.endTimeMs - this.startTimeMs) / 1000,

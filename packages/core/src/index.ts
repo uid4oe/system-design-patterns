@@ -20,6 +20,8 @@ export type {
 } from "./simulation/types.js";
 export { SeededRandom } from "./simulation/random.js";
 export { SimulationClock } from "./simulation/clock.js";
+export { SimulationRunner } from "./simulation/runner.js";
+export type { SimulationContext } from "./simulation/runner.js";
 
 // Eval
 export { MetricCollector } from "./eval/metrics.js";
