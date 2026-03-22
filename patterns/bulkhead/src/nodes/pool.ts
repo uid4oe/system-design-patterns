@@ -103,6 +103,13 @@ export class PoolNode extends BaseNode {
       this.activeCount--;
       if (this.isDegraded && this.activeCount < this.maxConcurrency) {
         this.isDegraded = false;
+        emitter.emit({
+          type: "node_state_change",
+          node: this.name,
+          from: "degraded",
+          to: "active",
+          reason: `capacity available (${this.activeCount}/${this.maxConcurrency})`,
+        });
       }
     }
   }

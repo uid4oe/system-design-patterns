@@ -23,7 +23,7 @@ export class LBBackendNode extends SimpleNode {
   }
 
   protected getProcessingDetail(request: SimulationRequest): string {
-    return `handling ${request.id} (${this.connections} active)`;
+    return `handling ${request.id} (${this.connections + 1} active)`;
   }
 
   getActiveConnections(): number {
