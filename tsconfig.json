@@ -8,6 +8,7 @@
     { "path": "patterns/saga" },
     { "path": "patterns/cqrs" },
     { "path": "patterns/load-balancer" },
-    { "path": "patterns/pub-sub" }
+    { "path": "patterns/pub-sub" },
+    { "path": "patterns/bulkhead" }
   ]
 }

@@ -397,10 +397,78 @@ const pubSub: PatternContent = {
   ],
 };
 
+const bulkhead: PatternContent = {
+  name: "bulkhead",
+  icon: "🚧",
+  tagline: "Isolated resource pools preventing cascade failures",
+  description:
+    "Isolates resources into separate pools — like ship bulkheads that contain flooding to one compartment. Each service gets its own thread pool with a fixed capacity. When one pool is exhausted, requests to that service are rejected while other pools remain unaffected, preventing one failing component from taking down the entire system.",
+  whenToUse: [
+    "Multi-tenant systems where one tenant's load shouldn't affect others",
+    "Services with varying reliability — isolate unstable services from stable ones",
+    "Preventing thread/connection pool exhaustion from cascading across services",
+    "Complementing circuit breakers with proactive resource isolation",
+  ],
+  architectureMermaid: `graph LR
+    Client[Client] --> GW[Gateway]
+    GW --> PA[Pool A<br/>10 threads]
+    GW --> PB[Pool B<br/>10 threads]
+    GW --> PC[Pool C<br/>5 threads]
+    PA --> SA[Service A]
+    PB --> SB[Service B]
+    PC --> SC[Service C]`,
+  howItWorks: [
+    "Gateway receives requests and routes them to the appropriate pool based on target service",
+    "Each pool has a fixed maximum concurrency (e.g., Pool A: 10 threads, Pool C: 5 threads)",
+    "If a pool has available capacity, the request passes through to the backend service",
+    "If a pool is full, the request is immediately rejected — preventing resource exhaustion",
+    "Key insight: when Service A is overloaded and Pool A fills up, Pool B and Pool C are completely unaffected",
+  ],
+  nodes: [
+    { name: "gateway", role: "gateway", description: "Routes requests to the appropriate pool based on target service" },
+    { name: "pool-a", role: "thread-pool", description: "10-thread pool isolating Service A traffic" },
+    { name: "pool-b", role: "thread-pool", description: "10-thread pool isolating Service B traffic" },
+    { name: "pool-c", role: "thread-pool", description: "5-thread pool isolating Service C traffic" },
+    { name: "service-a", role: "backend-service", description: "Backend service A (150ms latency)" },
+    { name: "service-b", role: "backend-service", description: "Backend service B (100ms latency)" },
+    { name: "service-c", role: "backend-service", description: "Backend service C (80ms latency)" },
+  ],
+  tradeoffs: {
+    pros: [
+      "Failure isolation — one service's problems don't cascade to others",
+      "Predictable resource usage per service (no resource starvation)",
+      "Graceful degradation — system partially works even under stress",
+      "Easy to tune per-service capacity based on importance",
+    ],
+    cons: [
+      "Resource underutilization — idle pools can't lend capacity to busy ones",
+      "Complexity of sizing pools correctly (too small = unnecessary rejections)",
+      "More configuration to manage (one pool per service boundary)",
+      "Doesn't help if the overall system is underpowered",
+    ],
+  },
+  suggestedScenarios: [
+    {
+      label: "Normal traffic",
+      description: "Balanced load across all 3 services — no pool exhaustion",
+      requestCount: 15,
+      requestsPerSecond: 3,
+    },
+    {
+      label: "Service A fails",
+      description: "Service A fails 100% — Pool A absorbs failures while B and C stay healthy",
+      requestCount: 15,
+      requestsPerSecond: 3,
+      failureInjection: { nodeFailures: { "service-a": 1.0 } },
+    },
+  ],
+};
+
 export const PATTERN_CONTENT: Record<string, PatternContent> = {
   saga,
   cqrs,
   "load-balancer": loadBalancer,
   "pub-sub": pubSub,
   "circuit-breaker": circuitBreaker,
+  bulkhead,
 };

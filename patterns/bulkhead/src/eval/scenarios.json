@@ -1,0 +1,22 @@
+{
+  "name": "bulkhead-eval",
+  "scenarios": [
+    {
+      "name": "normal_traffic",
+      "config": { "requestCount": 20, "requestsPerSecond": 5, "seed": 1 },
+      "criteria": [
+        { "name": "error_rate", "threshold": 0.01, "comparator": "lt", "weight": 1 }
+      ]
+    },
+    {
+      "name": "service_a_failure",
+      "config": {
+        "requestCount": 20, "requestsPerSecond": 5, "seed": 2,
+        "failureInjection": { "nodeFailures": { "service-a": 1.0 } }
+      },
+      "criteria": [
+        { "name": "pool-b_rejected", "threshold": 1, "comparator": "lt", "weight": 1 }
+      ]
+    }
+  ]
+}

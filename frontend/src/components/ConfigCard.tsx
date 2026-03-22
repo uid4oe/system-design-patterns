@@ -8,7 +8,7 @@ const FAILURE_TARGET: Record<string, string> = {
   cqrs: "event-store",
   "load-balancer": "backend-3",
   "pub-sub": "sub-2",
-  bulkhead: "backend",
+  bulkhead: "service-a",
   "rate-limiter": "backend",
 };
 

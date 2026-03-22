@@ -7,6 +7,7 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
+    "@design-patterns/bulkhead": "*",
     "@design-patterns/circuit-breaker": "*",
     "@design-patterns/core": "*",
     "@design-patterns/cqrs": "*",
