@@ -1,12 +1,5 @@
-import type {
-  PatternSimulator,
-  ScenarioConfig,
-  SimulationEmitter,
-  AggregateMetrics,
-  RequestResult,
-} from "@design-patterns/core";
-import { MetricCollector, SeededRandom, SimulationClock } from "@design-patterns/core";
-import { ClientNode } from "./nodes/client.js";
+import type { PatternSimulator, SimulationEmitter, AggregateMetrics } from "@design-patterns/core";
+import { SimulationRunner, SimulationClock } from "@design-patterns/core";
 import { BackendNode } from "./nodes/backend.js";
 import { CircuitBreakerNode } from "./nodes/circuit-breaker.js";
 
@@ -16,136 +9,44 @@ export const description =
 
 export function createSimulator(): PatternSimulator {
   return {
-    async run(
-      scenario: ScenarioConfig,
-      emitter: SimulationEmitter,
-    ) {
+    async run(scenario, emitter) {
       const seed = scenario.seed ?? Date.now();
       const realTime = scenario.realTime ?? false;
-      const random = new SeededRandom(seed);
       const clock = new SimulationClock();
-      const collector = new MetricCollector();
-      const requestResults: RequestResult[] = [];
 
-      // Create nodes — pass realTime for frontend visualization pacing
       const backend = new BackendNode(
         { name: "backend", role: "service", latencyMs: 30 },
-        seed + 1,
-        clock,
-        realTime,
+        seed + 1, clock, realTime,
       );
       const breaker = new CircuitBreakerNode(
-        {
-          name: "breaker",
-          failureThreshold: 5,
-          cooldownMs: 3000,
-          halfOpenMaxProbes: 1,
-          backend,
+        { name: "breaker", failureThreshold: 5, cooldownMs: 3000, halfOpenMaxProbes: 1, backend },
+        seed + 2, clock, realTime,
+      );
+
+      backend.setFailureRate(scenario.failureInjection?.nodeFailures?.["backend"] ?? 0);
+
+      return SimulationRunner.run({
+        scenario,
+        emitter,
+        clock,
+        nodes: [breaker, backend],
+        async processRequest(request, ctx) {
+          ctx.emitter.emit({
+            type: "request_flow", from: "client", to: "breaker",
+            requestId: request.id,
+          });
+          const result = await breaker.run(request, ctx.emitter);
+          return {
+            result,
+            path: result.success ? ["client", "breaker", "backend"] : ["client", "breaker"],
+          };
         },
-        seed + 2,
-        clock,
-        realTime,
-      );
-      const client = new ClientNode(
-        { name: "client", role: "request-generator", latencyMs: 0 },
-        seed + 3,
-        clock,
-        realTime,
-      );
-
-      // Apply failure injection
-      const backendFailureRate =
-        scenario.failureInjection?.nodeFailures?.["backend"] ?? 0;
-      backend.setFailureRate(backendFailureRate);
-
-      // Emit node_start for all nodes
-      client.emitStart(emitter);
-      breaker.emitStart(emitter);
-      backend.emitStart(emitter);
-
-      collector.start(clock.now());
-      const startTime = clock.now();
-
-      // Run simulation
-      const intervalMs = 1000 / scenario.requestsPerSecond;
-
-      for (let i = 0; i < scenario.requestCount; i++) {
-        const requestId = `req-${i + 1}`;
-        const request = {
-          id: requestId,
-          payload: `request-${i + 1}`,
-          metadata: { index: i },
-        };
-
-        // Pace requests — real-time delay for visualization, virtual time for tests
-        if (i > 0) {
-          const jitter = random.between(0.8, 1.2);
-          await clock.delay(Math.round(intervalMs * jitter), realTime);
-        }
-
-        // Client → Breaker
-        emitter.emit({
-          type: "request_flow",
-          from: "client",
-          to: "breaker",
-          requestId,
-        });
-
-        const result = await breaker.run(request, emitter);
-
-        // Track metrics
-        collector.recordLatency(result.durationMs);
-        if (result.success) {
-          collector.recordSuccess();
-        } else {
-          collector.recordError();
-        }
-
-        requestResults.push({
-          requestId,
-          success: result.success,
-          latencyMs: result.durationMs,
-          path: result.success
-            ? ["client", "breaker", "backend"]
-            : ["client", "breaker"],
-          error: result.success ? undefined : result.output,
-        });
-      }
-
-      collector.stop(clock.now());
-      const totalDurationMs = clock.now() - startTime;
-      const metrics: AggregateMetrics = collector.getAggregateMetrics();
-
-      // Emit fast_fail_ratio metric
-      if (metrics.totalRequests > 0) {
-        const fastFailRatio = metrics.errorCount / metrics.totalRequests;
-        emitter.emit({
-          type: "metric",
-          name: "fast_fail_ratio",
-          value: fastFailRatio,
-          unit: "ratio",
-          node: "breaker",
-        });
-        emitter.emit({
-          type: "metric",
-          name: "error_rate",
-          value: fastFailRatio,
-          unit: "ratio",
-        });
-      }
-
-      // Emit node_end for all nodes
-      client.emitEnd(emitter, totalDurationMs);
-      breaker.emitEnd(emitter, totalDurationMs);
-      backend.emitEnd(emitter, totalDurationMs);
-
-      emitter.emit({
-        type: "done",
-        totalDurationMs,
-        aggregateMetrics: metrics,
+        emitPatternMetrics(metrics: AggregateMetrics, em: SimulationEmitter) {
+          if (metrics.totalRequests > 0) {
+            em.emit({ type: "metric", name: "fast_fail_ratio", value: metrics.errorCount / metrics.totalRequests, unit: "ratio", node: "breaker" });
+          }
+        },
       });
-
-      return { result: { totalDurationMs, requestResults }, metrics };
     },
   };
 }

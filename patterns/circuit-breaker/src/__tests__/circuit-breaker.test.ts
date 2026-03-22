@@ -300,13 +300,12 @@ describe("Circuit Breaker Simulator", () => {
       emitter,
     );
 
-    // First 3 events must be node_start (client, breaker, backend)
-    const firstThree = emitter.events.slice(0, 3);
-    expect(firstThree.every((e) => e.type === "node_start")).toBe(true);
-    const nodeNames = firstThree
+    // First 2 events must be node_start (breaker, backend)
+    const firstTwo = emitter.events.slice(0, 2);
+    expect(firstTwo.every((e) => e.type === "node_start")).toBe(true);
+    const nodeNames = firstTwo
       .filter((e): e is Extract<SimulationEvent, { type: "node_start" }> => e.type === "node_start")
       .map((e) => e.node);
-    expect(nodeNames).toContain("client");
     expect(nodeNames).toContain("breaker");
     expect(nodeNames).toContain("backend");
 

@@ -260,7 +260,7 @@ function layoutThreeColumn(
   );
 
   const result: Node[] = [];
-  const spacing = 65;
+  const spacing = 100;
 
   // Left node (gateway)
   if (leftNode) {
@@ -268,7 +268,7 @@ function layoutThreeColumn(
       id: leftNode.id,
       type: "simulation",
       data: { ...leftNode, isActiveTarget: leftNode.id === activeNodeId },
-      position: { x: -280, y: 0 },
+      position: { x: -180, y: 0 },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
     });
@@ -294,7 +294,7 @@ function layoutThreeColumn(
       id: tn.id,
       type: "simulation",
       data: { ...tn, isActiveTarget: tn.id === activeNodeId },
-      position: { x: 280, y: -rightHeight / 2 + i * spacing },
+      position: { x: 180, y: -rightHeight / 2 + i * spacing },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
     });
@@ -316,7 +316,7 @@ function layoutPubSub(
   );
 
   const result: Node[] = [];
-  const subSpacing = 65;
+  const subSpacing = 100;
 
   // Publishers on the left
   const pubHeight = (publishers.length - 1) * subSpacing;
@@ -325,7 +325,7 @@ function layoutPubSub(
       id: tn.id,
       type: "simulation",
       data: { ...tn, isActiveTarget: tn.id === activeNodeId },
-      position: { x: -280, y: -pubHeight / 2 + i * subSpacing },
+      position: { x: -180, y: -pubHeight / 2 + i * subSpacing },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
     });
@@ -350,7 +350,7 @@ function layoutPubSub(
       id: tn.id,
       type: "simulation",
       data: { ...tn, isActiveTarget: tn.id === activeNodeId },
-      position: { x: 280, y: -subHeight / 2 + i * subSpacing },
+      position: { x: 180, y: -subHeight / 2 + i * subSpacing },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
     });
