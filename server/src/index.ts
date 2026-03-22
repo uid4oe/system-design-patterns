@@ -11,7 +11,7 @@ const PATTERN_PACKAGES: string[] = [
   "@design-patterns/circuit-breaker",
   "@design-patterns/saga",
   "@design-patterns/cqrs",
-  // "@design-patterns/load-balancer",
+  "@design-patterns/load-balancer",
   // "@design-patterns/pub-sub",
   // "@design-patterns/bulkhead",
   // "@design-patterns/rate-limiter",

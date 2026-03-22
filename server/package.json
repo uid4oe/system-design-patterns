@@ -10,6 +10,7 @@
     "@design-patterns/circuit-breaker": "*",
     "@design-patterns/core": "*",
     "@design-patterns/cqrs": "*",
+    "@design-patterns/load-balancer": "*",
     "@design-patterns/saga": "*",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

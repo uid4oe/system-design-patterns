@@ -1,0 +1,22 @@
+{
+  "name": "load-balancer-eval",
+  "scenarios": [
+    {
+      "name": "even_distribution",
+      "config": { "requestCount": 40, "requestsPerSecond": 10, "seed": 1 },
+      "criteria": [
+        { "name": "error_rate", "threshold": 0.01, "comparator": "lt", "weight": 1 }
+      ]
+    },
+    {
+      "name": "backend_failure",
+      "config": {
+        "requestCount": 40, "requestsPerSecond": 10, "seed": 2,
+        "failureInjection": { "nodeFailures": { "backend-3": 1.0 } }
+      },
+      "criteria": [
+        { "name": "error_rate", "threshold": 0.35, "comparator": "lt", "weight": 1 }
+      ]
+    }
+  ]
+}

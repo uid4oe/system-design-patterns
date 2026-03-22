@@ -272,8 +272,72 @@ const cqrs: PatternContent = {
   ],
 };
 
+const loadBalancer: PatternContent = {
+  name: "load-balancer",
+  icon: "⚖️",
+  tagline: "Request distribution across backend instances",
+  description:
+    "Distributes incoming requests across multiple backend instances to achieve even load, high availability, and horizontal scaling. Uses round-robin algorithm to cycle through healthy backends, automatically skipping failed instances.",
+  whenToUse: [
+    "Horizontal scaling — distribute traffic across multiple server instances",
+    "High availability — if one backend fails, others absorb the load",
+    "Even resource utilization — prevent any single instance from being overloaded",
+    "Zero-downtime deployments — drain one instance while others serve traffic",
+  ],
+  architectureMermaid: `graph LR
+    Client[Client] --> LB[Load Balancer<br/>round-robin]
+    LB --> B1[Backend 1]
+    LB --> B2[Backend 2]
+    LB --> B3[Backend 3]
+    LB --> B4[Backend 4]`,
+  howItWorks: [
+    "Client sends all requests to the load balancer, which acts as a single entry point",
+    "The LB maintains a list of backend instances and filters out unhealthy ones",
+    "Using round-robin, it cycles through healthy backends: request 1 → backend-1, request 2 → backend-2, etc.",
+    "Each backend processes the request independently with its own latency and failure characteristics",
+    "If a backend fails, the LB detects it and routes subsequent requests to remaining healthy instances",
+  ],
+  nodes: [
+    { name: "lb", role: "load-balancer", description: "Distributes requests across backends using round-robin" },
+    { name: "backend-1", role: "backend-instance", description: "Server instance 1 (100ms latency)" },
+    { name: "backend-2", role: "backend-instance", description: "Server instance 2 (100ms latency)" },
+    { name: "backend-3", role: "backend-instance", description: "Server instance 3 (100ms latency)" },
+    { name: "backend-4", role: "backend-instance", description: "Server instance 4 (100ms latency)" },
+  ],
+  tradeoffs: {
+    pros: [
+      "Simple to implement and reason about (round-robin is stateless)",
+      "Automatic failover — unhealthy backends are skipped",
+      "Linear horizontal scaling — add more backends to handle more load",
+      "No single point of failure for backends (LB itself is the SPOF)",
+    ],
+    cons: [
+      "Round-robin ignores backend load — a slow instance gets same traffic as a fast one",
+      "No session affinity — requests from same client may hit different backends",
+      "LB is a single point of failure (needs its own redundancy)",
+      "Doesn't account for varying request complexity or backend capacity",
+    ],
+  },
+  suggestedScenarios: [
+    {
+      label: "Even distribution",
+      description: "40 requests across 4 healthy backends — watch round-robin cycle",
+      requestCount: 20,
+      requestsPerSecond: 5,
+    },
+    {
+      label: "Backend-3 down",
+      description: "One backend fails 100% — remaining 3 absorb the load",
+      requestCount: 20,
+      requestsPerSecond: 5,
+      failureInjection: { nodeFailures: { "backend-3": 1.0 } },
+    },
+  ],
+};
+
 export const PATTERN_CONTENT: Record<string, PatternContent> = {
   "circuit-breaker": circuitBreaker,
   saga,
   cqrs,
+  "load-balancer": loadBalancer,
 };

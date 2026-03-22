@@ -106,7 +106,7 @@ function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null)
   // For patterns with an orchestrator/coordinator, use hub layout
   // Otherwise use horizontal layout
   const orchestratorIdx = topologyNodes.findIndex(
-    (n) => n.role === "saga-orchestrator" || n.role === "circuit-breaker" || n.role === "coordinator",
+    (n) => n.role === "saga-orchestrator" || n.role === "circuit-breaker" || n.role === "coordinator" || n.role === "load-balancer",
   );
 
   if (orchestratorIdx >= 0 && topologyNodes.length > 3) {
