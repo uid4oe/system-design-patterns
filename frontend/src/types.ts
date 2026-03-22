@@ -2,7 +2,7 @@ import type {
   SimulationEvent,
   AggregateMetrics,
   ScenarioConfig,
-} from "@design-patterns/core";
+} from "@system-design-patterns/core";
 
 export type { SimulationEvent, AggregateMetrics, ScenarioConfig };
 

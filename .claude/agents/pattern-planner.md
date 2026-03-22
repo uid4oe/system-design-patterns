@@ -59,10 +59,10 @@ Single commit updating these three files:
 **`server/src/index.ts`** — add to PATTERN_PACKAGES:
 ```typescript
 const PATTERN_PACKAGES = [
-  "@design-patterns/circuit-breaker",
-  "@design-patterns/saga",
+  "@system-design-patterns/circuit-breaker",
+  "@system-design-patterns/saga",
   // ... existing patterns ...
-  "@design-patterns/{new-pattern}",  // ← add here
+  "@system-design-patterns/{new-pattern}",  // ← add here
 ];
 ```
 
@@ -70,7 +70,7 @@ const PATTERN_PACKAGES = [
 ```json
 {
   "dependencies": {
-    "@design-patterns/{new-pattern}": "*"
+    "@system-design-patterns/{new-pattern}": "*"
   }
 }
 ```
@@ -101,8 +101,8 @@ Per `.claude/docs/feedback-loop.md`:
 
 ## Key Constraints
 
-- Patterns only import from `@design-patterns/core` — no cross-pattern dependencies
-- Package name: `@design-patterns/{pattern-name}`
+- Patterns only import from `@system-design-patterns/core` — no cross-pattern dependencies
+- Package name: `@system-design-patterns/{pattern-name}`
 - `package.json` exports: `{ ".": "./src/index.ts" }`
 - `tsconfig.json` extends `../../tsconfig.base.json`, references core
 - Root `package.json` workspaces glob `patterns/*` auto-discovers new patterns

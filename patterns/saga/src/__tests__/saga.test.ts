@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { SimulationClock, CollectingEmitter } from "@design-patterns/core";
-import type { SimulationEvent } from "@design-patterns/core";
+import { SimulationClock, CollectingEmitter } from "@system-design-patterns/core";
+import type { SimulationEvent } from "@system-design-patterns/core";
 import {
   OrderService,
   PaymentService,

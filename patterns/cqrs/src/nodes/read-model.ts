@@ -1,5 +1,5 @@
-import { SimpleNode } from "@design-patterns/core";
-import type { NodeResult, SimulationRequest, SimulationEmitter } from "@design-patterns/core";
+import { SimpleNode } from "@system-design-patterns/core";
+import type { NodeResult, SimulationRequest, SimulationEmitter } from "@system-design-patterns/core";
 import type { StoredEvent } from "./event-store.js";
 
 /**

@@ -1,5 +1,5 @@
-import type { PatternSimulator, SimulationEmitter } from "@design-patterns/core";
-import { SimulationRunner, SimulationClock, SeededRandom } from "@design-patterns/core";
+import type { PatternSimulator, SimulationEmitter } from "@system-design-patterns/core";
+import { SimulationRunner, SimulationClock, SeededRandom } from "@system-design-patterns/core";
 import { CommandService } from "./nodes/command-service.js";
 import { EventStoreNode } from "./nodes/event-store.js";
 import { ProjectorNode } from "./nodes/projector.js";

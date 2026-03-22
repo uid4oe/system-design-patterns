@@ -1,5 +1,5 @@
-import { SimpleNode } from "@design-patterns/core";
-import type { NodeResult, SimulationRequest } from "@design-patterns/core";
+import { SimpleNode } from "@system-design-patterns/core";
+import type { NodeResult, SimulationRequest } from "@system-design-patterns/core";
 
 /**
  * Publisher sends messages to a topic via the broker.
@@ -9,10 +9,10 @@ export class PublisherNode extends SimpleNode {
   private publishCount = 0;
 
   constructor(
-    config: import("@design-patterns/core").NodeConfig,
+    config: import("@system-design-patterns/core").NodeConfig,
     topic: string,
     seed?: number,
-    clock?: import("@design-patterns/core").SimulationClock,
+    clock?: import("@system-design-patterns/core").SimulationClock,
     realTime?: boolean,
   ) {
     super(config, seed, clock, realTime);

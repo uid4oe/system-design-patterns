@@ -2,7 +2,7 @@
 
 Interactive system design pattern simulations with live topology visualization, real-time metrics streaming, and scenario-based evaluation.
 
-Run it locally for the fully interactive experience, or check out the **live demo:** https://design-patterns.uid4oe.dev/
+Run it locally for the fully interactive experience, or check out the **live demo:** https://system-design-patterns.uid4oe.dev/
 
 ## Patterns
 
@@ -19,8 +19,8 @@ Run it locally for the fully interactive experience, or check out the **live dem
 ## Quick Start
 
 ```bash
-git clone https://github.com/uid4oe/design-patterns.git
-cd design-patterns
+git clone https://github.com/uid4oe/system-design-patterns.git
+cd system-design-patterns
 
 npm install
 npm run dev
@@ -30,7 +30,7 @@ Open http://localhost:3000, select a pattern, and run a scenario.
 
 ## Docker
 
-Pre-built images are available on [GitHub Packages](https://github.com/uid4oe/design-patterns/pkgs/container):
+Pre-built images are available on [GitHub Packages](https://github.com/uid4oe/system-design-patterns/pkgs/container):
 
 ```bash
 # Pull and run pre-built images (no build needed)
@@ -58,7 +58,7 @@ docker compose up --build
 ## Project Structure
 
 ```
-design-patterns/
+system-design-patterns/
 ├── packages/core/       # Simulation engine, node classes, eval runner
 ├── server/              # Express server, SSE streaming, pattern + eval routes
 ├── frontend/            # React app — educational content + live topology

@@ -1,11 +1,11 @@
-import { SimpleNode } from "@design-patterns/core";
+import { SimpleNode } from "@system-design-patterns/core";
 import type {
   NodeResult,
   SimulationRequest,
   SimulationEmitter,
   NodeConfig,
   SimulationClock,
-} from "@design-patterns/core";
+} from "@system-design-patterns/core";
 
 /**
  * Base class for saga service nodes. Each service has a forward operation

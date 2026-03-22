@@ -1,5 +1,5 @@
-import type { PatternSimulator } from "@design-patterns/core";
-import { SimulationRunner, SimulationClock } from "@design-patterns/core";
+import type { PatternSimulator } from "@system-design-patterns/core";
+import { SimulationRunner, SimulationClock } from "@system-design-patterns/core";
 import { OrderService, PaymentService, InventoryService, ShippingService } from "./nodes/saga-service.js";
 import { SagaOrchestrator } from "./nodes/orchestrator.js";
 

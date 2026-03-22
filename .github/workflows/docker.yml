@@ -55,7 +55,7 @@ jobs:
       - name: Prune old server images
         uses: actions/delete-package-versions@v5
         with:
-          package-name: design-patterns-server
+          package-name: system-design-patterns-server
           package-type: container
           min-versions-to-keep: 3
           delete-only-untagged-versions: false
@@ -63,7 +63,7 @@ jobs:
       - name: Prune old frontend images
         uses: actions/delete-package-versions@v5
         with:
-          package-name: design-patterns-frontend
+          package-name: system-design-patterns-frontend
           package-type: container
           min-versions-to-keep: 3
           delete-only-untagged-versions: false

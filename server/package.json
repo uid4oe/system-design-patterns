@@ -1,5 +1,5 @@
 {
-  "name": "@design-patterns/server",
+  "name": "@system-design-patterns/server",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -7,14 +7,14 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
-    "@design-patterns/bulkhead": "*",
-    "@design-patterns/circuit-breaker": "*",
-    "@design-patterns/core": "*",
-    "@design-patterns/cqrs": "*",
-    "@design-patterns/load-balancer": "*",
-    "@design-patterns/pub-sub": "*",
-    "@design-patterns/rate-limiter": "*",
-    "@design-patterns/saga": "*",
+    "@system-design-patterns/bulkhead": "*",
+    "@system-design-patterns/circuit-breaker": "*",
+    "@system-design-patterns/core": "*",
+    "@system-design-patterns/cqrs": "*",
+    "@system-design-patterns/load-balancer": "*",
+    "@system-design-patterns/pub-sub": "*",
+    "@system-design-patterns/rate-limiter": "*",
+    "@system-design-patterns/saga": "*",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.0"

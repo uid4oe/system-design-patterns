@@ -1,5 +1,5 @@
 import type { Response } from "express";
-import type { SimulationEmitter, SimulationEvent } from "@design-patterns/core";
+import type { SimulationEmitter, SimulationEvent } from "@system-design-patterns/core";
 
 /**
  * SSE emitter that bridges SimulationEvents to an HTTP response stream.

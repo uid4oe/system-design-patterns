@@ -8,13 +8,13 @@ import { rateLimiter } from "./middleware/rate-limiter.js";
 import type { LoadedPattern } from "./routes/patterns.js";
 
 const PATTERN_PACKAGES: string[] = [
-  "@design-patterns/saga",
-  "@design-patterns/cqrs",
-  "@design-patterns/load-balancer",
-  "@design-patterns/pub-sub",
-  "@design-patterns/circuit-breaker",
-  "@design-patterns/bulkhead",
-  "@design-patterns/rate-limiter",
+  "@system-design-patterns/saga",
+  "@system-design-patterns/cqrs",
+  "@system-design-patterns/load-balancer",
+  "@system-design-patterns/pub-sub",
+  "@system-design-patterns/circuit-breaker",
+  "@system-design-patterns/bulkhead",
+  "@system-design-patterns/rate-limiter",
 ];
 
 async function loadPatterns(): Promise<Map<string, LoadedPattern>> {
@@ -25,7 +25,7 @@ async function loadPatterns(): Promise<Map<string, LoadedPattern>> {
       const mod = (await import(pkg)) as {
         name: string;
         description: string;
-        createSimulator: () => import("@design-patterns/core").PatternSimulator;
+        createSimulator: () => import("@system-design-patterns/core").PatternSimulator;
       };
       patterns.set(mod.name, {
         name: mod.name,

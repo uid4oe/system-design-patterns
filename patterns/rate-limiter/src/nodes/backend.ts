@@ -1,5 +1,5 @@
-import { SimpleNode } from "@design-patterns/core";
-import type { NodeResult, SimulationRequest } from "@design-patterns/core";
+import { SimpleNode } from "@system-design-patterns/core";
+import type { NodeResult, SimulationRequest } from "@system-design-patterns/core";
 
 export class BackendNode extends SimpleNode {
   protected async handleRequest(request: SimulationRequest): Promise<NodeResult> {

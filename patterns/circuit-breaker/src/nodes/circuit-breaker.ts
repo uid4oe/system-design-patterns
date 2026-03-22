@@ -1,10 +1,10 @@
-import { BaseNode } from "@design-patterns/core";
-import type { SimulationClock } from "@design-patterns/core";
+import { BaseNode } from "@system-design-patterns/core";
+import type { SimulationClock } from "@system-design-patterns/core";
 import type {
   NodeResult,
   SimulationRequest,
   SimulationEmitter,
-} from "@design-patterns/core";
+} from "@system-design-patterns/core";
 import { BackendNode } from "./backend.js";
 
 type BreakerState = "closed" | "open" | "half-open";

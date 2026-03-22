@@ -1,9 +1,9 @@
-import { BaseNode } from "@design-patterns/core";
+import { BaseNode } from "@system-design-patterns/core";
 import type {
   NodeResult,
   SimulationRequest,
   SimulationEmitter,
-} from "@design-patterns/core";
+} from "@system-design-patterns/core";
 
 export interface StoredEvent {
   sequence: number;

@@ -1,5 +1,5 @@
-import type { PatternSimulator } from "@design-patterns/core";
-import { SimulationRunner, SimulationClock } from "@design-patterns/core";
+import type { PatternSimulator } from "@system-design-patterns/core";
+import { SimulationRunner, SimulationClock } from "@system-design-patterns/core";
 import { ServiceNode } from "./nodes/service.js";
 import { PoolNode } from "./nodes/pool.js";
 import { GatewayNode } from "./nodes/gateway.js";

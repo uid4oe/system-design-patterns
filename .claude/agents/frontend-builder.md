@@ -20,7 +20,7 @@ You build the React frontend at `frontend/src/`.
 ## Key Constraints
 
 - React 19, Vite, Tailwind CSS v4, React Flow (for topology visualization)
-- Use `import type { SimulationEvent, AggregateMetrics } from "@design-patterns/core"` for shared types
+- Use `import type { SimulationEvent, AggregateMetrics } from "@system-design-patterns/core"` for shared types
 - NO runtime imports from other workspaces — only `import type`
 - `useSimulation` uses `fetch` + `ReadableStream` (not EventSource — POST doesn't work with EventSource)
 - SSE parsing: split on `\n\n`, extract `data:` prefix, JSON.parse each event

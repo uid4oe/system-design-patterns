@@ -21,8 +21,8 @@ Each pattern package must export three things from `src/index.ts`:
 
 ```typescript
 // patterns/circuit-breaker/src/index.ts
-import { BaseNode } from "@design-patterns/core";
-import type { PatternSimulator, SimulationEmitter, ScenarioConfig } from "@design-patterns/core";
+import { BaseNode } from "@system-design-patterns/core";
+import type { PatternSimulator, SimulationEmitter, ScenarioConfig } from "@system-design-patterns/core";
 
 export const name = "circuit-breaker";
 export const description = "Failure isolation via Closed → Open → Half-Open state machine";
@@ -50,7 +50,7 @@ The server dynamically imports each pattern and calls `createSimulator()`:
 
 ```typescript
 // server/src/index.ts (simplified)
-const mod = await import("@design-patterns/circuit-breaker");
+const mod = await import("@system-design-patterns/circuit-breaker");
 patterns.set(mod.name, {
   name: mod.name,
   description: mod.description,

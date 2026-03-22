@@ -1,5 +1,5 @@
-import type { PatternSimulator } from "@design-patterns/core";
-import { SimulationRunner, SimulationClock } from "@design-patterns/core";
+import type { PatternSimulator } from "@system-design-patterns/core";
+import { SimulationRunner, SimulationClock } from "@system-design-patterns/core";
 import { BackendNode } from "./nodes/backend.js";
 import { RateLimiterNode } from "./nodes/rate-limiter.js";
 

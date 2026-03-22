@@ -1,5 +1,5 @@
-import type { PatternSimulator, SimulationEmitter, AggregateMetrics } from "@design-patterns/core";
-import { SimulationRunner, SimulationClock } from "@design-patterns/core";
+import type { PatternSimulator, SimulationEmitter, AggregateMetrics } from "@system-design-patterns/core";
+import { SimulationRunner, SimulationClock } from "@system-design-patterns/core";
 import { BackendNode } from "./nodes/backend.js";
 import { CircuitBreakerNode } from "./nodes/circuit-breaker.js";
 

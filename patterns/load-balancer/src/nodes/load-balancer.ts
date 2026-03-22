@@ -1,10 +1,10 @@
-import { BaseNode } from "@design-patterns/core";
+import { BaseNode } from "@system-design-patterns/core";
 import type {
   NodeResult,
   SimulationRequest,
   SimulationEmitter,
   SimulationClock,
-} from "@design-patterns/core";
+} from "@system-design-patterns/core";
 import type { LBBackendNode } from "./backend.js";
 
 type LBAlgorithm = "round-robin" | "least-connections" | "consistent-hash";

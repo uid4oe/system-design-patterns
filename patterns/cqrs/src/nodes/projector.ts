@@ -1,5 +1,5 @@
-import { SimpleNode } from "@design-patterns/core";
-import type { NodeResult, SimulationRequest } from "@design-patterns/core";
+import { SimpleNode } from "@system-design-patterns/core";
+import type { NodeResult, SimulationRequest } from "@system-design-patterns/core";
 
 /**
  * Projector — consumes events from the event store and updates

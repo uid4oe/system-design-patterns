@@ -6,7 +6,7 @@ When creating a new pattern, use these boilerplate files as a starting point.
 
 ```json
 {
-  "name": "@design-patterns/{name}",
+  "name": "@system-design-patterns/{name}",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@ When creating a new pattern, use these boilerplate files as a starting point.
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@design-patterns/core": "*"
+    "@system-design-patterns/core": "*"
   }
 }
 ```
@@ -39,7 +39,7 @@ When creating a new pattern, use these boilerplate files as a starting point.
 ## `patterns/{name}/src/index.ts`
 
 ```typescript
-import type { PatternSimulator, ScenarioConfig, SimulationEmitter, AggregateMetrics, SimulationResult } from "@design-patterns/core";
+import type { PatternSimulator, ScenarioConfig, SimulationEmitter, AggregateMetrics, SimulationResult } from "@system-design-patterns/core";
 
 export const name = "{name}";
 export const description = "{one-line description}";

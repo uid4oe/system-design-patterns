@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { SimulationClock, CollectingEmitter } from "@design-patterns/core";
-import type { SimulationEvent } from "@design-patterns/core";
+import { SimulationClock, CollectingEmitter } from "@system-design-patterns/core";
+import type { SimulationEvent } from "@system-design-patterns/core";
 import { PublisherNode } from "../nodes/publisher.js";
 import { SubscriberNode } from "../nodes/subscriber.js";
 import { BrokerNode } from "../nodes/broker.js";

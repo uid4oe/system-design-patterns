@@ -23,7 +23,7 @@ An interactive educational platform for system design and distribution patterns.
 ## Directory Structure
 
 ```
-design-patterns/
+system-design-patterns/
 ├── packages/
 │   └── core/                          # Shared simulation engine
 │       └── src/

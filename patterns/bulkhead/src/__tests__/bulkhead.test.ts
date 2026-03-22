@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { SimulationClock, CollectingEmitter } from "@design-patterns/core";
+import { SimulationClock, CollectingEmitter } from "@system-design-patterns/core";
 import { ServiceNode } from "../nodes/service.js";
 import { PoolNode } from "../nodes/pool.js";
 import { GatewayNode } from "../nodes/gateway.js";

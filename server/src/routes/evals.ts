@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
-import { loadDataset, runEval } from "@design-patterns/core";
+import { loadDataset, runEval } from "@system-design-patterns/core";
 import type { LoadedPattern } from "./patterns.js";
 
 export function createEvalRoutes(

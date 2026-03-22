@@ -1,5 +1,5 @@
 import { Router } from "express";
-import type { PatternSimulator, ScenarioConfig } from "@design-patterns/core";
+import type { PatternSimulator, ScenarioConfig } from "@system-design-patterns/core";
 import { SSESimulationEmitter } from "../stream.js";
 
 export interface LoadedPattern {

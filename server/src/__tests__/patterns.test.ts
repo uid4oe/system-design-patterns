@@ -3,7 +3,7 @@ import express from "express";
 import request from "supertest";
 import { createPatternRoutes } from "../routes/patterns.js";
 import type { LoadedPattern } from "../routes/patterns.js";
-import type { PatternSimulator } from "@design-patterns/core";
+import type { PatternSimulator } from "@system-design-patterns/core";
 
 function createMockPattern(name: string): LoadedPattern {
   const simulator: PatternSimulator = {

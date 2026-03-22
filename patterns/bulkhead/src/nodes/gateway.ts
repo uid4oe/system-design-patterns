@@ -1,10 +1,10 @@
-import { BaseNode } from "@design-patterns/core";
+import { BaseNode } from "@system-design-patterns/core";
 import type {
   NodeResult,
   SimulationRequest,
   SimulationEmitter,
   SimulationClock,
-} from "@design-patterns/core";
+} from "@system-design-patterns/core";
 import type { PoolNode } from "./pool.js";
 
 interface GatewayConfig {

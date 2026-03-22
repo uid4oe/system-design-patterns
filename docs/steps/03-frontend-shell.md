@@ -22,7 +22,7 @@ Build the React frontend with topology visualization, control panel, and metrics
 ### 3.2 Frontend Types (`types.ts`)
 
 ```typescript
-import type { SimulationEvent, AggregateMetrics, ScenarioConfig } from "@design-patterns/core";
+import type { SimulationEvent, AggregateMetrics, ScenarioConfig } from "@system-design-patterns/core";
 
 export interface TopologyNode {
   id: string;

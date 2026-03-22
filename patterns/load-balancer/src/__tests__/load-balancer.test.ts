@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { SimulationClock, CollectingEmitter } from "@design-patterns/core";
-import type { SimulationEvent } from "@design-patterns/core";
+import { SimulationClock, CollectingEmitter } from "@system-design-patterns/core";
+import type { SimulationEvent } from "@system-design-patterns/core";
 import { LBBackendNode } from "../nodes/backend.js";
 import { LoadBalancerNode } from "../nodes/load-balancer.js";
 import { createSimulator } from "../index.js";
