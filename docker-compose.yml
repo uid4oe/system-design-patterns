@@ -1,5 +1,6 @@
 services:
   server:
+    image: ghcr.io/uid4oe/design-patterns-server:latest
     build:
       context: .
       dockerfile: server/Dockerfile
@@ -11,6 +12,7 @@ services:
     restart: unless-stopped
 
   frontend:
+    image: ghcr.io/uid4oe/design-patterns-frontend:latest
     build:
       context: .
       dockerfile: frontend/Dockerfile

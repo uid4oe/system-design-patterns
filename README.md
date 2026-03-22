@@ -1,6 +1,6 @@
 # Design Patterns
 
-Educational project demonstrating 7 system design and distribution patterns with interactive simulations, real-time topology visualization, and metric-based evaluation.
+Interactive system design pattern simulations with live topology visualization, real-time metrics streaming, and scenario-based evaluation.
 
 Run it locally for the fully interactive experience, or check out the **live demo:** https://design-patterns.uid4oe.dev/
 
@@ -30,12 +30,14 @@ Open http://localhost:3000, select a pattern, and run a scenario.
 
 ## Docker
 
-```bash
-# Build and run
-docker compose up --build
+Pre-built images are available on [GitHub Packages](https://github.com/uid4oe/design-patterns/pkgs/container):
 
-# Or just run (server :3001, frontend :3000)
+```bash
+# Pull and run pre-built images (no build needed)
 docker compose up
+
+# Or build locally
+docker compose up --build
 ```
 
 | Service | URL |
