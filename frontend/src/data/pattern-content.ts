@@ -335,9 +335,72 @@ const loadBalancer: PatternContent = {
   ],
 };
 
+const pubSub: PatternContent = {
+  name: "pub-sub",
+  icon: "📡",
+  tagline: "Event-driven fan-out with topic routing",
+  description:
+    "Decouples producers from consumers via a message broker. Publishers send events to topics, and the broker fans out each message to all subscribers of that topic. Enables loose coupling, independent scaling of producers and consumers, and event-driven architectures.",
+  whenToUse: [
+    "Event-driven architectures where multiple services react to the same event",
+    "Notification systems — one event triggers emails, push notifications, analytics",
+    "Microservice integration without direct coupling between services",
+    "Real-time data distribution (market data, sensor readings, chat messages)",
+  ],
+  architectureMermaid: `graph LR
+    Pub[Publisher] -->|orders| Broker[Broker<br/>topic router]
+    Broker --> S1[Subscriber 1]
+    Broker --> S2[Subscriber 2]
+    Broker --> S3[Subscriber 3]`,
+  howItWorks: [
+    "Publisher sends messages tagged with a topic (e.g., 'orders') to the broker",
+    "The broker maintains a registry of which subscribers are interested in which topics",
+    "For each incoming message, the broker resolves all subscribers for that topic",
+    "Fan-out delivery: the broker sends the message to every matching subscriber, one by one",
+    "Each subscriber processes the message independently with its own latency and failure characteristics",
+  ],
+  nodes: [
+    { name: "publisher", role: "publisher", description: "Produces messages tagged with a topic" },
+    { name: "broker", role: "message-broker", description: "Routes messages to subscribers by topic, manages fan-out" },
+    { name: "sub-1", role: "subscriber", description: "Consumer 1 — processes order events (80ms)" },
+    { name: "sub-2", role: "subscriber", description: "Consumer 2 — processes order events (100ms)" },
+    { name: "sub-3", role: "subscriber", description: "Consumer 3 — processes order events (60ms)" },
+  ],
+  tradeoffs: {
+    pros: [
+      "Loose coupling — publishers don't know about subscribers",
+      "Easy to add new subscribers without changing publishers",
+      "Natural fit for event-driven and reactive architectures",
+      "Independent scaling of producers and consumers",
+    ],
+    cons: [
+      "Message ordering not guaranteed across subscribers",
+      "At-least-once delivery means subscribers must handle duplicates",
+      "Broker is a single point of failure (needs clustering/replication)",
+      "Debugging message flow across many subscribers is complex",
+    ],
+  },
+  suggestedScenarios: [
+    {
+      label: "Fan-out delivery",
+      description: "10 messages fan out to all 3 subscribers — each gets every message",
+      requestCount: 10,
+      requestsPerSecond: 3,
+    },
+    {
+      label: "Subscriber-2 down",
+      description: "One subscriber fails — broker still delivers to the other two",
+      requestCount: 8,
+      requestsPerSecond: 3,
+      failureInjection: { nodeFailures: { "sub-2": 1.0 } },
+    },
+  ],
+};
+
 export const PATTERN_CONTENT: Record<string, PatternContent> = {
   "circuit-breaker": circuitBreaker,
   saga,
   cqrs,
   "load-balancer": loadBalancer,
+  "pub-sub": pubSub,
 };

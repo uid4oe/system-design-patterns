@@ -1,0 +1,22 @@
+{
+  "name": "pub-sub-eval",
+  "scenarios": [
+    {
+      "name": "simple_fanout",
+      "config": { "requestCount": 10, "requestsPerSecond": 5, "seed": 1 },
+      "criteria": [
+        { "name": "error_rate", "threshold": 0.01, "comparator": "lt", "weight": 1 }
+      ]
+    },
+    {
+      "name": "subscriber_failure",
+      "config": {
+        "requestCount": 15, "requestsPerSecond": 5, "seed": 2,
+        "failureInjection": { "nodeFailures": { "sub-2": 1.0 } }
+      },
+      "criteria": [
+        { "name": "error_rate", "threshold": 0.5, "comparator": "lt", "weight": 1 }
+      ]
+    }
+  ]
+}
