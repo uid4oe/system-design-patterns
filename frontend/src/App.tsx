@@ -123,22 +123,24 @@ export function App() {
 
       {/* Bottom bar — pattern tabs + cancel */}
       <div className="shrink-0">
-        <div className="max-w-2xl w-full mx-auto rounded-2xl glass-strong px-3 py-2 transition-shadow">
+        <div className="w-fit mx-auto rounded-2xl glass-strong px-3 py-2 transition-shadow">
           <div className="flex items-center gap-2">
             <PatternSelector
               selected={selectedPattern}
               onSelect={handlePatternSelect}
               isStreaming={state.isRunning}
             />
-            <div className="flex-1" />
             {state.isRunning && (
-              <button
-                type="button"
-                onClick={reset}
-                className="shrink-0 rounded-lg px-2.5 py-1 text-[12px] font-medium text-red-600 hover:bg-red-50 transition-all"
-              >
-                Cancel
-              </button>
+              <>
+                <div className="flex-1" />
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="shrink-0 rounded-lg px-2.5 py-1 text-[12px] font-medium text-red-600 hover:bg-red-50 transition-all"
+                >
+                  Cancel
+                </button>
+              </>
             )}
           </div>
         </div>

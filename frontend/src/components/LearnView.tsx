@@ -123,14 +123,6 @@ function ScenarioCards({ scenarios, onTryScenario, isRunning, onReset }: Scenari
           </button>
         ))}
       </div>
-      {isRunning && (
-        <button
-          onClick={onReset}
-          className="text-[12px] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors"
-        >
-          Cancel simulation
-        </button>
-      )}
     </div>
   );
 }

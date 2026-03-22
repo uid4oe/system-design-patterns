@@ -125,6 +125,12 @@ function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null)
     return layoutHubSpoke(topologyNodes, orchestratorIdx, activeNodeId);
   }
 
+  // CQRS: write path top row, read path bottom row
+  const hasEventStore = topologyNodes.some((n) => n.role === "event-store");
+  if (hasEventStore && topologyNodes.length > 3) {
+    return layoutCqrs(topologyNodes, activeNodeId);
+  }
+
   // For >3 nodes without hub, use 2-row grid
   if (topologyNodes.length > 3) {
     return layoutGrid(topologyNodes, activeNodeId);
@@ -143,6 +149,37 @@ function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null)
     sourcePosition: Position.Right,
     targetPosition: Position.Left,
   }));
+}
+
+/**
+ * CQRS layout: two horizontal paths
+ * Top:    command-svc → event-store → projector → read-model
+ * Bottom: query-svc ─────────────────────────────↗ (read-model)
+ */
+function layoutCqrs(
+  topologyNodes: TopologyNode[],
+  activeNodeId: string | null,
+): Node[] {
+  // Define fixed positions for CQRS nodes
+  const positions: Record<string, { x: number; y: number }> = {
+    "command-svc": { x: -240, y: -60 },
+    "event-store": { x: -80, y: -60 },
+    projector: { x: 80, y: -60 },
+    "query-svc": { x: -240, y: 60 },
+    "read-model": { x: 240, y: -10 },
+  };
+
+  return topologyNodes.map((tn) => {
+    const pos = positions[tn.id] ?? { x: 0, y: 0 };
+    return {
+      id: tn.id,
+      type: "simulation",
+      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      position: pos,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    };
+  });
 }
 
 /** Grid layout: 2 columns, nodes stacked vertically per column */
