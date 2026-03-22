@@ -2,6 +2,8 @@
 
 Educational project demonstrating 7 system design and distribution patterns with interactive simulations, real-time topology visualization, and metric-based evaluation.
 
+Run it locally for the fully interactive experience, or check out the **live demo:** https://design-patterns.uid4oe.dev/
+
 ## Patterns
 
 | Pattern | Description | When to Use |
