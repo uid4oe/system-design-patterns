@@ -398,9 +398,9 @@ const pubSub: PatternContent = {
 };
 
 export const PATTERN_CONTENT: Record<string, PatternContent> = {
-  "circuit-breaker": circuitBreaker,
   saga,
   cqrs,
   "load-balancer": loadBalancer,
   "pub-sub": pubSub,
+  "circuit-breaker": circuitBreaker,
 };
