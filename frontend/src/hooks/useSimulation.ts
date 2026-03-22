@@ -60,6 +60,16 @@ export function reduceEvent(
 
     case "request_flow": {
       const edgeKey = `${event.from}->${event.to}`;
+      // Count requests entering the system (from client)
+      const isNewRequest = event.from === "client";
+      const prevMetrics = state.metrics ?? {
+        totalRequests: 0, successCount: 0, errorCount: 0,
+        p50LatencyMs: 0, p99LatencyMs: 0, throughputRps: 0,
+      };
+      const updatedMetrics = isNewRequest
+        ? { ...prevMetrics, totalRequests: prevMetrics.totalRequests + 1 }
+        : prevMetrics;
+
       const existingEdge = state.edges.find(
         (e) => `${e.from}->${e.to}` === edgeKey,
       );
@@ -68,6 +78,7 @@ export function reduceEvent(
           ...state,
           activeEdgeKey: edgeKey,
           activeNodeId: event.to,
+          metrics: updatedMetrics,
           edges: state.edges.map((e) =>
             `${e.from}->${e.to}` === edgeKey
               ? { ...e, active: true, requestCount: e.requestCount + 1, lastRequestId: event.requestId }
@@ -87,6 +98,7 @@ export function reduceEvent(
         ...state,
         activeEdgeKey: edgeKey,
         activeNodeId: event.to,
+        metrics: updatedMetrics,
         edges: [...state.edges.map((e) => ({ ...e, active: false })), newEdge],
         events: [...state.events, event],
       };
@@ -134,21 +146,48 @@ export function reduceEvent(
         events: [...state.events, event],
       };
 
-    case "metric":
+    case "metric": {
+      // Build running metrics from well-known metric events
+      const prev = state.metrics ?? {
+        totalRequests: 0,
+        successCount: 0,
+        errorCount: 0,
+        p50LatencyMs: 0,
+        p99LatencyMs: 0,
+        throughputRps: 0,
+      };
+      let updated = prev;
+      if (event.name === "error_rate" && prev.totalRequests > 0) {
+        updated = { ...prev, errorCount: Math.round(event.value * prev.totalRequests) };
+      } else if (event.name === "completion_count" || event.name === "total_accepted") {
+        updated = { ...prev, successCount: event.value, totalRequests: event.value + prev.errorCount };
+      } else if (event.name === "rollback_count" || event.name === "total_rejected") {
+        updated = { ...prev, errorCount: event.value, totalRequests: prev.successCount + event.value };
+      } else if (event.name === "event_store_size" || event.name === "total_deliveries") {
+        updated = { ...prev, totalRequests: Math.max(prev.totalRequests, event.value) };
+      }
       return {
         ...state,
+        metrics: updated,
         events: [...state.events, event],
       };
+    }
 
-    case "error":
+    case "error": {
+      const errMetrics = state.metrics ?? {
+        totalRequests: 0, successCount: 0, errorCount: 0,
+        p50LatencyMs: 0, p99LatencyMs: 0, throughputRps: 0,
+      };
       return {
         ...state,
         error: event.message,
+        metrics: { ...errMetrics, errorCount: errMetrics.errorCount + 1 },
         nodes: state.nodes.map((n) =>
           n.id === event.node ? { ...n, state: "failed" as const } : n,
         ),
         events: [...state.events, event],
       };
+    }
 
     case "done":
       return {
