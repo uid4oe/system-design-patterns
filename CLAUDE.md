@@ -179,7 +179,7 @@ docker compose up                        # server + frontend
 - [x] Step 4e: Pub/Sub Pattern (8 tests — fan-out delivery, topic filtering, consumer group round-robin, failure handling)
 - [x] Step 4f: Bulkhead Pattern (7 tests — pool isolation, rejection, gateway routing, cascade prevention)
 - [x] Step 4g: Rate Limiter Pattern (10 tests — token bucket, burst, refill, accept/reject ratio)
-- [ ] Step 5: Eval System
+- [~] Step 5: Eval System (skipped — eval runner + datasets already in core)
 - [ ] Step 6: Docker
 - [ ] Step 7: Documentation
 - [ ] Step 8: Educational Content
