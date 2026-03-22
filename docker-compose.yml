@@ -7,6 +7,7 @@ services:
       - "3001:3001"
     environment:
       - SERVER_PORT=3001
+      - FRONTEND_URL=http://localhost:3000
     restart: unless-stopped
 
   frontend:
@@ -16,5 +17,6 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     restart: unless-stopped
