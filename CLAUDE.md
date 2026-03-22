@@ -180,6 +180,6 @@ docker compose up                        # server + frontend
 - [x] Step 4f: Bulkhead Pattern (7 tests — pool isolation, rejection, gateway routing, cascade prevention)
 - [x] Step 4g: Rate Limiter Pattern (10 tests — token bucket, burst, refill, accept/reject ratio)
 - [~] Step 5: Eval System (skipped — eval runner + datasets already in core)
-- [ ] Step 6: Docker
-- [ ] Step 7: Documentation
-- [ ] Step 8: Educational Content
+- [x] Step 6: Docker (server + frontend Dockerfiles, compose, nginx SSE proxy)
+- [x] Step 7: Documentation (README with architecture, commands, project structure)
+- [x] Step 8: Educational Content (LearnView with 7 pattern contents, Mermaid diagrams, Try-it scenarios)
