@@ -19,7 +19,7 @@ export function createSimulator(): PatternSimulator {
         seed + 1, clock, realTime,
       );
       const breaker = new CircuitBreakerNode(
-        { name: "breaker", failureThreshold: 5, cooldownMs: 3000, halfOpenMaxProbes: 1, backend },
+        { name: "breaker", failureThreshold: 3, cooldownMs: 3000, halfOpenMaxProbes: 1, backend },
         seed + 2, clock, realTime,
       );
 
@@ -29,6 +29,7 @@ export function createSimulator(): PatternSimulator {
         scenario,
         emitter,
         clock,
+        concurrency: 2,
         nodes: [breaker, backend],
         async processRequest(request, ctx) {
           ctx.emitter.emit({

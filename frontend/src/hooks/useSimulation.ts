@@ -54,14 +54,16 @@ export function reduceEvent(
     case "processing":
       return {
         ...state,
-        activeNodeId: event.node,
+        activeNodeIds: state.activeNodeIds.includes(event.node)
+          ? state.activeNodeIds
+          : [...state.activeNodeIds, event.node],
         events: [...state.events, event],
       };
 
     case "request_flow": {
       const edgeKey = `${event.from}->${event.to}`;
-      // Count requests entering the system (from client)
-      const isNewRequest = event.from === "client";
+      // Count requests entering the system (from client/publisher)
+      const isNewRequest = event.from === "client" || event.from === "publisher";
       const prevMetrics = state.metrics ?? {
         totalRequests: 0, successCount: 0, errorCount: 0,
         p50LatencyMs: 0, p99LatencyMs: 0, throughputRps: 0,
@@ -75,19 +77,27 @@ export function reduceEvent(
           }
         : prevMetrics;
 
+      // Add edge key to active set (don't replace — parallel edges stay lit)
+      const newActiveEdges = state.activeEdgeKeys.includes(edgeKey)
+        ? state.activeEdgeKeys
+        : [...state.activeEdgeKeys, edgeKey];
+      const newActiveNodes = state.activeNodeIds.includes(event.to)
+        ? state.activeNodeIds
+        : [...state.activeNodeIds, event.to];
+
       const existingEdge = state.edges.find(
         (e) => `${e.from}->${e.to}` === edgeKey,
       );
       if (existingEdge) {
         return {
           ...state,
-          activeEdgeKey: edgeKey,
-          activeNodeId: event.to,
+          activeEdgeKeys: newActiveEdges,
+          activeNodeIds: newActiveNodes,
           metrics: updatedMetrics,
           edges: state.edges.map((e) =>
             `${e.from}->${e.to}` === edgeKey
               ? { ...e, active: true, requestCount: e.requestCount + 1, lastRequestId: event.requestId }
-              : { ...e, active: false },
+              : e,
           ),
           events: [...state.events, event],
         };
@@ -101,10 +111,10 @@ export function reduceEvent(
       };
       return {
         ...state,
-        activeEdgeKey: edgeKey,
-        activeNodeId: event.to,
+        activeEdgeKeys: newActiveEdges,
+        activeNodeIds: newActiveNodes,
         metrics: updatedMetrics,
-        edges: [...state.edges.map((e) => ({ ...e, active: false })), newEdge],
+        edges: [...state.edges, newEdge],
         events: [...state.events, event],
       };
     }
@@ -133,8 +143,8 @@ export function reduceEvent(
     case "node_end":
       return {
         ...state,
-        activeEdgeKey: state.activeNodeId === event.node ? null : state.activeEdgeKey,
-        activeNodeId: state.activeNodeId === event.node ? null : state.activeNodeId,
+        activeEdgeKeys: state.activeEdgeKeys.filter((k) => !k.endsWith(`->${event.node}`)),
+        activeNodeIds: state.activeNodeIds.filter((id) => id !== event.node),
         nodes: state.nodes.map((n) =>
           n.id === event.node
             ? {
@@ -209,8 +219,8 @@ export function reduceEvent(
         ...state,
         isRunning: false,
         metrics: event.aggregateMetrics,
-        activeEdgeKey: null,
-        activeNodeId: null,
+        activeEdgeKeys: [],
+        activeNodeIds: [],
         edges: state.edges.map((e) => ({ ...e, active: false })),
         events: [...state.events, event],
       };
@@ -267,10 +277,34 @@ export function useSimulation(activePattern: string | null) {
             if (!part.startsWith("data: ")) continue;
             try {
               const event = JSON.parse(part.slice(6)) as SimulationEvent;
-              // flushSync breaks React 18 batching so topology updates per-event
-              flushSync(() => setState((prev) => reduceEvent(prev, event)));
-              // Delay between events so the UI streams visibly
-              await new Promise((r) => setTimeout(r, 300));
+
+              // Apply event — clear highlights on metric boundaries
+              flushSync(() => setState((prev) => {
+                if (event.type === "metric" && (event.name === "p50_latency_ms" || event.name === "p99_latency_ms" || event.name === "throughput_rps")) {
+                  return reduceEvent({ ...prev, activeEdgeKeys: [], activeNodeIds: [] }, event);
+                }
+                return reduceEvent(prev, event);
+              }));
+
+              // Delay per event type:
+              // - metric/node_start: no delay (structural)
+              // - request_flow/processing: 150ms (parallel but readable)
+              // - node_end: 120ms
+              // - everything else: 350ms (visible state changes)
+              switch (event.type) {
+                case "metric":
+                case "node_start":
+                  break;
+                case "request_flow":
+                case "processing":
+                  await new Promise((r) => setTimeout(r, 150));
+                  break;
+                case "node_end":
+                  await new Promise((r) => setTimeout(r, 120));
+                  break;
+                default:
+                  await new Promise((r) => setTimeout(r, 350));
+              }
             } catch {
               // Skip malformed events
             }

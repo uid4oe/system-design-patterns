@@ -19,7 +19,7 @@ export function createSimulator(): PatternSimulator {
         seed + 1, clock, realTime,
       );
       const limiter = new RateLimiterNode(
-        { name: "limiter", maxTokens: 20, refillRate: 10, backend },
+        { name: "limiter", maxTokens: 5, refillRate: 3, backend },
         seed + 2, clock, realTime,
       );
 
@@ -29,6 +29,7 @@ export function createSimulator(): PatternSimulator {
 
       return SimulationRunner.run({
         scenario, emitter, clock,
+        concurrency: 3,
         nodes: [limiter, backend],
         async processRequest(request, ctx) {
           ctx.emitter.emit({ type: "request_flow", from: "client", to: "limiter", requestId: request.id });

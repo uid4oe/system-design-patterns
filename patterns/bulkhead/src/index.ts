@@ -24,16 +24,17 @@ export function createSimulator(): PatternSimulator {
       if (failures["service-b"] !== undefined) serviceB.setFailureRate(failures["service-b"]);
       if (failures["service-c"] !== undefined) serviceC.setFailureRate(failures["service-c"]);
 
-      const poolA = new PoolNode({ name: "pool-a", maxConcurrency: 10, service: serviceA }, seed + 4, clock, realTime);
-      const poolB = new PoolNode({ name: "pool-b", maxConcurrency: 10, service: serviceB }, seed + 5, clock, realTime);
-      const poolC = new PoolNode({ name: "pool-c", maxConcurrency: 5, service: serviceC }, seed + 6, clock, realTime);
+      const poolA = new PoolNode({ name: "pool-a", maxConcurrency: 3, service: serviceA }, seed + 4, clock, realTime);
+      const poolB = new PoolNode({ name: "pool-b", maxConcurrency: 3, service: serviceB }, seed + 5, clock, realTime);
+      const poolC = new PoolNode({ name: "pool-c", maxConcurrency: 3, service: serviceC }, seed + 6, clock, realTime);
 
       const pools = new Map([["service-a", poolA], ["service-b", poolB], ["service-c", poolC]]);
       const gateway = new GatewayNode({ name: "gateway", pools }, seed + 7, clock, realTime);
-      const services = ["service-a", "service-a", "service-a", "service-b", "service-c"];
+      const services = ["service-a", "service-b", "service-c"];
 
       return SimulationRunner.run({
         scenario, emitter, clock,
+        concurrency: services.length,
         nodes: [gateway, poolA, poolB, poolC, serviceA, serviceB, serviceC],
         async processRequest(request, ctx) {
           const targetService = services[(request.metadata?.["index"] as number ?? 0) % services.length] ?? "service-a";
@@ -42,7 +43,7 @@ export function createSimulator(): PatternSimulator {
           const result = await gateway.run(req, ctx.emitter);
           return {
             result,
-            path: ["gateway", `pool-${targetService.split("-")[1]}`, targetService],
+            path: ["gateway", `pool-${targetService.split("-")[1] ?? "a"}`, targetService],
           };
         },
         emitPatternMetrics(_metrics, em) {

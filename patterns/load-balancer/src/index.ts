@@ -40,6 +40,7 @@ export function createSimulator(): PatternSimulator {
 
       return SimulationRunner.run({
         scenario, emitter, clock,
+        concurrency: 3,
         nodes: [lb, ...backends],
         async processRequest(request, ctx) {
           ctx.emitter.emit({ type: "request_flow", from: "client", to: "lb", requestId: request.id });

@@ -33,6 +33,7 @@ export function createSimulator(): PatternSimulator {
 
       return SimulationRunner.run({
         scenario, emitter, clock,
+        concurrency: 2,
         nodes: [publisher, broker, sub1, sub2, sub3],
         async processRequest(request, ctx) {
           const req = { ...request, payload: `order-event-${request.id}`, metadata: { topic: "orders" } };

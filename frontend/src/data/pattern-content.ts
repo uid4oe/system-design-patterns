@@ -93,21 +93,21 @@ const circuitBreaker: PatternContent = {
   suggestedScenarios: [
     {
       label: "Healthy traffic",
-      description: "50 requests with no failures — circuit stays closed",
-      requestCount: 50,
+      description: "10 requests with no failures — circuit stays closed",
+      requestCount: 10,
       requestsPerSecond: 10,
     },
     {
       label: "50% backend failures",
       description: "Watch the breaker trip and fast-fail subsequent requests",
-      requestCount: 30,
+      requestCount: 12,
       requestsPerSecond: 5,
       failureInjection: { nodeFailures: { backend: 0.5 } },
     },
     {
       label: "Total backend outage",
       description: "100% failure rate — see the breaker open immediately",
-      requestCount: 20,
+      requestCount: 10,
       requestsPerSecond: 8,
       failureInjection: { nodeFailures: { backend: 1.0 } },
     },
@@ -187,21 +187,21 @@ const saga: PatternContent = {
   suggestedScenarios: [
     {
       label: "Happy path",
-      description: "All 4 steps complete — order, payment, inventory, shipping succeed",
-      requestCount: 10,
+      description: "3 requests — all 4 steps complete each time",
+      requestCount: 3,
       requestsPerSecond: 5,
     },
     {
       label: "Inventory failure",
-      description: "Inventory fails 50% — watch compensation roll back payment and order",
-      requestCount: 10,
+      description: "3 requests — inventory fails 50%, watch compensation roll back",
+      requestCount: 3,
       requestsPerSecond: 3,
       failureInjection: { nodeFailures: { inventory: 0.5 } },
     },
     {
       label: "Payment always fails",
-      description: "Payment 100% failure — only order gets compensated each time",
-      requestCount: 8,
+      description: "4 requests — payment 100% failure, only order gets compensated",
+      requestCount: 4,
       requestsPerSecond: 3,
       failureInjection: { nodeFailures: { payment: 1.0 } },
     },
@@ -258,14 +258,14 @@ const cqrs: PatternContent = {
   suggestedScenarios: [
     {
       label: "Balanced load",
-      description: "50/50 read/write mix — observe both data paths and consistency lag",
-      requestCount: 20,
+      description: "8 requests — 50/50 read/write mix, observe both data paths",
+      requestCount: 8,
       requestsPerSecond: 5,
     },
     {
       label: "Event store failure",
-      description: "Event store fails 50% — writes fail but reads continue serving",
-      requestCount: 15,
+      description: "6 requests — event store fails 50%, writes fail but reads continue",
+      requestCount: 6,
       requestsPerSecond: 3,
       failureInjection: { nodeFailures: { "event-store": 0.5 } },
     },
@@ -321,14 +321,14 @@ const loadBalancer: PatternContent = {
   suggestedScenarios: [
     {
       label: "Even distribution",
-      description: "40 requests across 4 healthy backends — watch round-robin cycle",
-      requestCount: 20,
+      description: "10 requests across 4 healthy backends — watch round-robin cycle",
+      requestCount: 10,
       requestsPerSecond: 5,
     },
     {
       label: "Backend-3 down",
-      description: "One backend fails 100% — remaining 3 absorb the load",
-      requestCount: 20,
+      description: "10 requests — one backend fails, remaining 3 absorb the load",
+      requestCount: 10,
       requestsPerSecond: 5,
       failureInjection: { nodeFailures: { "backend-3": 1.0 } },
     },
@@ -383,14 +383,14 @@ const pubSub: PatternContent = {
   suggestedScenarios: [
     {
       label: "Fan-out delivery",
-      description: "10 messages fan out to all 3 subscribers — each gets every message",
-      requestCount: 10,
+      description: "5 messages fan out to all 3 subscribers — each gets every message",
+      requestCount: 5,
       requestsPerSecond: 3,
     },
     {
       label: "Subscriber-2 down",
-      description: "One subscriber fails — broker still delivers to the other two",
-      requestCount: 8,
+      description: "4 messages — one subscriber fails, broker delivers to the others",
+      requestCount: 4,
       requestsPerSecond: 3,
       failureInjection: { nodeFailures: { "sub-2": 1.0 } },
     },
@@ -411,15 +411,15 @@ const bulkhead: PatternContent = {
   ],
   architectureMermaid: `graph LR
     Client[Client] --> GW[Gateway]
-    GW --> PA[Pool A<br/>10 threads]
-    GW --> PB[Pool B<br/>10 threads]
-    GW --> PC[Pool C<br/>5 threads]
+    GW --> PA[Pool A<br/>3 threads]
+    GW --> PB[Pool B<br/>3 threads]
+    GW --> PC[Pool C<br/>3 threads]
     PA --> SA[Service A]
     PB --> SB[Service B]
     PC --> SC[Service C]`,
   howItWorks: [
     "Gateway receives requests and routes them to the appropriate pool based on target service",
-    "Each pool has a fixed maximum concurrency (e.g., Pool A: 10 threads, Pool C: 5 threads)",
+    "Each pool has a fixed maximum concurrency (e.g., 3 threads per pool)",
     "If a pool has available capacity, the request passes through to the backend service",
     "If a pool is full, the request is immediately rejected — preventing resource exhaustion",
     "Key insight: when Service A is overloaded and Pool A fills up, Pool B and Pool C are completely unaffected",
@@ -450,14 +450,14 @@ const bulkhead: PatternContent = {
   suggestedScenarios: [
     {
       label: "Normal traffic",
-      description: "Balanced load across all 3 services — no pool exhaustion",
-      requestCount: 15,
+      description: "6 requests — balanced load across all 3 pools, no exhaustion",
+      requestCount: 6,
       requestsPerSecond: 3,
     },
     {
       label: "Service A fails",
-      description: "Service A fails 100% — Pool A absorbs failures while B and C stay healthy",
-      requestCount: 15,
+      description: "9 requests — Service A fails, Pool A contains the blast radius, B and C unaffected",
+      requestCount: 9,
       requestsPerSecond: 3,
       failureInjection: { nodeFailures: { "service-a": 1.0 } },
     },
@@ -508,21 +508,21 @@ const rateLimiter: PatternContent = {
   suggestedScenarios: [
     {
       label: "Under limit",
-      description: "5 rps against 10/sec refill — all accepted, bucket stays full",
-      requestCount: 20,
+      description: "8 requests at 5 rps against 3/sec refill — all accepted from bucket",
+      requestCount: 8,
       requestsPerSecond: 5,
     },
     {
       label: "Burst overload",
-      description: "50 rps burst — first ~20 accepted (bucket), then rejections until refill",
-      requestCount: 40,
+      description: "12 requests at 50 rps — bucket empties fast, ~50% rejected",
+      requestCount: 12,
       requestsPerSecond: 50,
     },
     {
       label: "Sustained overload",
-      description: "30 rps against 10/sec limit — observe accept ratio stabilize at ~33%",
-      requestCount: 30,
-      requestsPerSecond: 30,
+      description: "10 requests at 15 rps — steady stream exceeds refill, gradual rejections",
+      requestCount: 10,
+      requestsPerSecond: 15,
     },
   ],
 };

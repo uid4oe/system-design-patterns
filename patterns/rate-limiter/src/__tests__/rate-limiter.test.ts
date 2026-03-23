@@ -144,11 +144,11 @@ describe("Rate Limiter Simulator", () => {
     const rejected = emitter.getMetricValue("total_rejected") ?? 0;
 
     const metrics = emitter.getAggregateMetrics();
-    // With 200rps burst against 20-token bucket + 10/sec refill:
-    // bucket drains fast, refill adds ~2 tokens over 200ms
-    // Some should fail
-    expect(metrics?.successCount).toBeGreaterThan(15);
-    expect(metrics?.errorCount).toBeGreaterThanOrEqual(0);
+    // With 200rps burst against 5-token bucket + 3/sec refill:
+    // bucket drains in ~5 requests, some refill during simulation
+    // Most should be rejected
+    expect(metrics?.successCount).toBeGreaterThan(3);
+    expect(metrics?.errorCount).toBeGreaterThan(0);
     expect((metrics?.successCount ?? 0) + (metrics?.errorCount ?? 0)).toBe(40);
   });
 

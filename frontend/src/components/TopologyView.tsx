@@ -14,8 +14,8 @@ import type { TopologyNode, TopologyEdge } from "../types.ts";
 interface TopologyViewProps {
   nodes: TopologyNode[];
   edges: TopologyEdge[];
-  activeEdgeKey?: string | null;
-  activeNodeId?: string | null;
+  activeEdgeKeys?: string[];
+  activeNodeIds?: string[];
 }
 
 const STATE_COLORS: Record<string, { border: string; bg: string; dot: string }> = {
@@ -102,19 +102,19 @@ function SimulationNodeComponent({ data }: NodeProps) {
 
 const nodeTypes = { simulation: SimulationNodeComponent };
 
-function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null): Node[] {
+function layoutNodes(topologyNodes: TopologyNode[], activeNodeIds: string[]): Node[] {
   // For patterns with an orchestrator/coordinator, use hub layout
   // Otherwise use horizontal layout
   // Pub-sub: publisher(s) left, broker center, subscribers right
   const brokerIdx = topologyNodes.findIndex((n) => n.role === "message-broker");
   if (brokerIdx >= 0 && topologyNodes.length > 3) {
-    return layoutPubSub(topologyNodes, brokerIdx, activeNodeId);
+    return layoutPubSub(topologyNodes, brokerIdx, activeNodeIds);
   }
 
   // Bulkhead: gateway left, pools center, services right
   const gatewayIdx = topologyNodes.findIndex((n) => n.role === "gateway");
   if (gatewayIdx >= 0 && topologyNodes.length > 3) {
-    return layoutThreeColumn(topologyNodes, gatewayIdx, activeNodeId);
+    return layoutThreeColumn(topologyNodes, gatewayIdx, activeNodeIds);
   }
 
   const orchestratorIdx = topologyNodes.findIndex(
@@ -122,18 +122,18 @@ function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null)
   );
 
   if (orchestratorIdx >= 0 && topologyNodes.length > 3) {
-    return layoutHubSpoke(topologyNodes, orchestratorIdx, activeNodeId);
+    return layoutHubSpoke(topologyNodes, orchestratorIdx, activeNodeIds);
   }
 
   // CQRS: write path top row, read path bottom row
   const hasEventStore = topologyNodes.some((n) => n.role === "event-store");
   if (hasEventStore && topologyNodes.length > 3) {
-    return layoutCqrs(topologyNodes, activeNodeId);
+    return layoutCqrs(topologyNodes, activeNodeIds);
   }
 
   // For >3 nodes without hub, use 2-row grid
   if (topologyNodes.length > 3) {
-    return layoutGrid(topologyNodes, activeNodeId);
+    return layoutGrid(topologyNodes, activeNodeIds);
   }
 
   // Simple horizontal for small topologies (≤3 nodes)
@@ -144,7 +144,7 @@ function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null)
   return topologyNodes.map((tn, i) => ({
     id: tn.id,
     type: "simulation",
-    data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+    data: { ...tn, isActiveTarget: activeNodeIds.includes(tn.id) },
     position: { x: startX + i * spacing, y: 0 },
     sourcePosition: Position.Right,
     targetPosition: Position.Left,
@@ -158,7 +158,7 @@ function layoutNodes(topologyNodes: TopologyNode[], activeNodeId: string | null)
  */
 function layoutCqrs(
   topologyNodes: TopologyNode[],
-  activeNodeId: string | null,
+  activeNodeIds: string[],
 ): Node[] {
   // Define fixed positions for CQRS nodes
   const positions: Record<string, { x: number; y: number }> = {
@@ -174,7 +174,7 @@ function layoutCqrs(
     return {
       id: tn.id,
       type: "simulation",
-      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      data: { ...tn, isActiveTarget: activeNodeIds.includes(tn.id) },
       position: pos,
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -185,7 +185,7 @@ function layoutCqrs(
 /** Grid layout: 2 columns, nodes stacked vertically per column */
 function layoutGrid(
   topologyNodes: TopologyNode[],
-  activeNodeId: string | null,
+  activeNodeIds: string[],
 ): Node[] {
   const cols = 2;
   const spacingX = 220;
@@ -199,7 +199,7 @@ function layoutGrid(
     return {
       id: tn.id,
       type: "simulation",
-      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      data: { ...tn, isActiveTarget: activeNodeIds.includes(tn.id) },
       position: { x: -spacingX / 2 + col * spacingX, y: -totalHeight / 2 + row * spacingY },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -211,7 +211,7 @@ function layoutGrid(
 function layoutHubSpoke(
   topologyNodes: TopologyNode[],
   hubIdx: number,
-  activeNodeId: string | null,
+  activeNodeIds: string[],
 ): Node[] {
   const hub = topologyNodes[hubIdx];
   const spokes = topologyNodes.filter((_, i) => i !== hubIdx);
@@ -224,7 +224,7 @@ function layoutHubSpoke(
     result.push({
       id: hub.id,
       type: "simulation",
-      data: { ...hub, isActiveTarget: hub.id === activeNodeId },
+      data: { ...hub, isActiveTarget: activeNodeIds.includes(hub.id) },
       position: { x: -160, y: 0 },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -235,7 +235,7 @@ function layoutHubSpoke(
     result.push({
       id: tn.id,
       type: "simulation",
-      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      data: { ...tn, isActiveTarget: activeNodeIds.includes(tn.id) },
       position: { x: 160, y: -totalSpokeHeight / 2 + i * spokeSpacing },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -249,7 +249,7 @@ function layoutHubSpoke(
 function layoutThreeColumn(
   topologyNodes: TopologyNode[],
   leftIdx: number,
-  activeNodeId: string | null,
+  activeNodeIds: string[],
 ): Node[] {
   const leftNode = topologyNodes[leftIdx];
   const middleTier = topologyNodes.filter(
@@ -267,7 +267,7 @@ function layoutThreeColumn(
     result.push({
       id: leftNode.id,
       type: "simulation",
-      data: { ...leftNode, isActiveTarget: leftNode.id === activeNodeId },
+      data: { ...leftNode, isActiveTarget: activeNodeIds.includes(leftNode.id) },
       position: { x: -180, y: 0 },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -280,7 +280,7 @@ function layoutThreeColumn(
     result.push({
       id: tn.id,
       type: "simulation",
-      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      data: { ...tn, isActiveTarget: activeNodeIds.includes(tn.id) },
       position: { x: 0, y: -midHeight / 2 + i * spacing },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -293,7 +293,7 @@ function layoutThreeColumn(
     result.push({
       id: tn.id,
       type: "simulation",
-      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      data: { ...tn, isActiveTarget: activeNodeIds.includes(tn.id) },
       position: { x: 180, y: -rightHeight / 2 + i * spacing },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -307,7 +307,7 @@ function layoutThreeColumn(
 function layoutPubSub(
   topologyNodes: TopologyNode[],
   brokerIdx: number,
-  activeNodeId: string | null,
+  activeNodeIds: string[],
 ): Node[] {
   const broker = topologyNodes[brokerIdx];
   const publishers = topologyNodes.filter((n) => n.role === "publisher");
@@ -324,7 +324,7 @@ function layoutPubSub(
     result.push({
       id: tn.id,
       type: "simulation",
-      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      data: { ...tn, isActiveTarget: activeNodeIds.includes(tn.id) },
       position: { x: -180, y: -pubHeight / 2 + i * subSpacing },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -336,7 +336,7 @@ function layoutPubSub(
     result.push({
       id: broker.id,
       type: "simulation",
-      data: { ...broker, isActiveTarget: broker.id === activeNodeId },
+      data: { ...broker, isActiveTarget: activeNodeIds.includes(broker.id) },
       position: { x: 0, y: 0 },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -349,7 +349,7 @@ function layoutPubSub(
     result.push({
       id: tn.id,
       type: "simulation",
-      data: { ...tn, isActiveTarget: tn.id === activeNodeId },
+      data: { ...tn, isActiveTarget: activeNodeIds.includes(tn.id) },
       position: { x: 180, y: -subHeight / 2 + i * subSpacing },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -361,12 +361,12 @@ function layoutPubSub(
 
 function layoutEdges(
   topologyEdges: TopologyEdge[],
-  activeEdgeKey: string | null,
+  activeEdgeKeys: string[],
   nodeStates: Map<string, TopologyNode["state"]>,
 ): Edge[] {
   return topologyEdges.map((te) => {
     const key = `${te.from}->${te.to}`;
-    const isActive = key === activeEdgeKey;
+    const isActive = activeEdgeKeys.includes(key);
     const targetState = nodeStates.get(te.to);
     const isFailed = targetState === "failed";
 
@@ -399,10 +399,10 @@ function layoutEdges(
   });
 }
 
-function TopologyInner({ nodes, edges, activeEdgeKey, activeNodeId }: TopologyViewProps) {
-  const flowNodes = layoutNodes(nodes, activeNodeId ?? null);
+function TopologyInner({ nodes, edges, activeEdgeKeys, activeNodeIds }: TopologyViewProps) {
+  const flowNodes = layoutNodes(nodes, activeNodeIds ?? []);
   const nodeStates = new Map(nodes.map((n) => [n.id, n.state]));
-  const flowEdges = layoutEdges(edges, activeEdgeKey ?? null, nodeStates);
+  const flowEdges = layoutEdges(edges, activeEdgeKeys ?? [], nodeStates);
 
   return (
     <ReactFlow
@@ -422,7 +422,7 @@ function TopologyInner({ nodes, edges, activeEdgeKey, activeNodeId }: TopologyVi
   );
 }
 
-export function TopologyView({ nodes, edges, activeEdgeKey, activeNodeId }: TopologyViewProps) {
+export function TopologyView({ nodes, edges, activeEdgeKeys, activeNodeIds }: TopologyViewProps) {
   if (nodes.length === 0) {
     return null;
   }
@@ -430,7 +430,7 @@ export function TopologyView({ nodes, edges, activeEdgeKey, activeNodeId }: Topo
   return (
     <div className="flex-1 animate-fade-in" style={{ width: "100%", height: "100%", minHeight: 220 }}>
       <ReactFlowProvider>
-        <TopologyInner nodes={nodes} edges={edges} activeEdgeKey={activeEdgeKey} activeNodeId={activeNodeId} />
+        <TopologyInner nodes={nodes} edges={edges} activeEdgeKeys={activeEdgeKeys} activeNodeIds={activeNodeIds} />
       </ReactFlowProvider>
     </div>
   );

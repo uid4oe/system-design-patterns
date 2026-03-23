@@ -92,8 +92,8 @@ export function App() {
                 <TopologyView
                   nodes={state.nodes}
                   edges={state.edges}
-                  activeEdgeKey={state.activeEdgeKey}
-                  activeNodeId={state.activeNodeId}
+                  activeEdgeKeys={state.activeEdgeKeys}
+                  activeNodeIds={state.activeNodeIds}
                 />
                 <div className="shrink-0 border-t border-[var(--color-border-light)]">
                   <MetricsPanel metrics={state.metrics} isRunning={state.isRunning} />

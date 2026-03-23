@@ -34,10 +34,10 @@ export interface SimulationState {
   isRunning: boolean;
   error: string | null;
   events: SimulationEvent[];
-  /** The edge key ("from->to") that was most recently activated */
-  activeEdgeKey: string | null;
-  /** The node currently processing a request */
-  activeNodeId: string | null;
+  /** Edge keys ("from->to") currently active — supports parallel highlighting */
+  activeEdgeKeys: string[];
+  /** Nodes currently processing requests — supports parallel highlighting */
+  activeNodeIds: string[];
 }
 
 export const INITIAL_STATE: SimulationState = {
@@ -47,6 +47,6 @@ export const INITIAL_STATE: SimulationState = {
   isRunning: false,
   error: null,
   events: [],
-  activeEdgeKey: null,
-  activeNodeId: null,
+  activeEdgeKeys: [],
+  activeNodeIds: [],
 };
